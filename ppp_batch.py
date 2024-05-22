@@ -9,7 +9,7 @@ import urllib.request
 from pathlib import Path
 import argparse
 import stat
-
+import re
 
 from tqdm import tqdm
 import pandas as pd
@@ -56,7 +56,7 @@ def downloadIonex(doy,year):
         get_ipython().system('gunzip $local_filename -f')
     return local_filename
 
-def run_rt_ppp(obsFile, outFile, template_conf, replaceDict):
+def run_rt_ppp(ppp_executable, obsFile, outFile, template_conf, replaceDict):
     #rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
     if not os.path.exists(outFile):
         temporaryConf(replaceDict, template_conf, 'temporary.inp')
@@ -65,19 +65,22 @@ def run_rt_ppp(obsFile, outFile, template_conf, replaceDict):
         print(f"Running {cmd}")
         result=subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         os.rename('output/RT_PPP.out', outFile)
-    df = pd.read_csv(outFile, comment='%', delim_whitespace=True, parse_dates=True, header='infer')
+    df = pd.read_csv(outFile, comment='%', sep='\s+', parse_dates=True, header='infer')
     pos = df[['X(m)', 'Y(m)', 'Z(m)']].mean(axis=0).to_numpy()
     return pos
 
-def run_rtklib(obsFile, outFile, template_conf, replaceDict):
-    if not os.path.exists(outFile):
+def run_rtklib(ppp_executable, obsFile, navFile, template_conf, replaceDict):
+    out_file = obsFile.split('.')[0]+'.rtklib'#'temp.obs'
+    if not os.path.exists(out_file):
         temporaryConf(replaceDict, template_conf, 'temporary.inp')
-        cmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.inp -o {outFile} {obsFile} {navFile} {navFile2}'
+        cmd=f'{ppp_executable} -x 2 -y 0 -k temporary.inp -o {out_file} {obsFile} {navFile}'
         print(f"Running {cmd}")
         result=subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        os.rename('output/RT_PPP.out', outFile)
-    df = pd.read_csv(outFile, comment='%', delim_whitespace=True, parse_dates=True, header='infer')
-    pos = df[['X(m)', 'Y(m)', 'Z(m)']].mean(axis=0).to_numpy()
+    if not os.path.exists(out_file):
+        return np.array([np.nan, np.nan, np.nan])
+    header = ['GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
+    df = pd.read_csv(out_file, comment='%', sep='\s+', parse_dates=True, names=header)#header='infer')
+    pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].mean(axis=0).to_numpy()
     return pos
 
 def absError(m):
@@ -94,11 +97,14 @@ def main():
     if ppp_solution =='rt_ppp':
         ppp_executable = "./rt_ppp" #In windows: ..\rt_ppp.exe
         run_folder = './rt_ppp'
-        template_conf = 'batch_run/template.conf'
+        template_conf = 'templates/rt_ppp_template_brdc.conf'
+        run_ppp_method = run_rt_ppp #this is a function
     if ppp_solution == 'rtklib':
-        ppp_executable = "./rt_ppp" #In windows: ..\rt_ppp.exe
-        run_folder = './rt_ppp'
-        template_conf = 'batch_run/template.conf'
+        ppp_executable = "rnx2rtkp" #In windows: ..\rt_ppp.exe
+        run_folder = './'
+        template_conf = 'templates/rtklib_template_brdc.conf'
+        run_ppp_method = run_rtklib #this is a function
+    save_array_as = 'out.npy'
     end_year = 2015
     start_year = 2015
     station = "onrj"
@@ -130,16 +136,14 @@ def main():
     os.chdir(run_folder)
     print(os.getcwd())
 
-    if not os.path.exists(ppp_executable):
-        print(f"Could not find RT_PPP in {ppp_executable}. Did you compile it?")
+    test_run = subprocess.run(ppp_executable, shell=True)
+    if test_run.returncode==127:
+        print(f"Could not find PPP executable in {ppp_executable}.")
         sys.exit(0)
     else:
-        print(f"Using RT_PPP in {ppp_executable}.")
+        print(f"Using PPP executable: {ppp_executable}.")
 
-    codgError=[]
-    c1pgError=[]
-    brdcError=[]
-    predError=[]
+    error=[]
 
     #basecommand="./rnx2rtkp -x 0 -y 0 -k "
     basecommand=ppp_executable
@@ -150,16 +154,13 @@ def main():
         year=str(day.year)
         fname=f'{station}{day.day_of_year:03}1.zip'
         if not os.path.exists(os.path.join(year,fname)):
-            codgError.append([0,0,0])
-            brdcError.append([0,0,0])
+            error.append([0,0,0])
             print(day,day.day_of_year)
             continue
         #downloadIonex(day.day_of_year,day.year)
 
         y2d=day.year%100
-        outFileIonex=os.path.join('output',f'ionex_{year}_{fname.replace(".zip",".pos")}')
-        outFileBrdc=os.path.join('output',f'brdc_{year}_{fname.replace(".zip",".pos")}')
-        outFilePred=os.path.join('output',f'pred_{year}_{fname.replace(".zip",".pos")}')
+        outFilePos=os.path.join('output',f'{year}_{fname.replace(".zip",".pos")}')
         obsFile=os.path.join('current',fname.replace(".zip",f".{y2d}o"))
         navFile=os.path.join('current',fname.replace(".zip",f".{y2d}n"))
         navFile2=os.path.join('current',fname.replace(".zip",f".{y2d}g"))
@@ -175,24 +176,16 @@ def main():
             '{z0}' : basePos[2],
             }
 
-        position = run_rt_ppp(obsFile, outFileBrdc, 'batch_run/template_brdc.conf', replaceDict = replaceDict)
+        position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, replaceDict = replaceDict)
+        error.append(position - basePos)
 
-        brdcError.append(position - basePos)
-
-        position = run_rt_ppp(obsFile, outFileIonex, 'batch_run/template_ionex.conf', replaceDict = replaceDict)
-        codgError.append(position - basePos)
-
-        #position = run_rt_ppp(obsFile, outFilePred, 'batch_run/template_ionex.conf', replaceDict = replaceDict)
-        #predError.append(np.linalg.norm(position - basePos))
-
-
-    codgError = np.array(codgError)
-    brdcError = np.array(brdcError)
+    error = np.array(error)
+    np.save(save_array_as,error)
 
 
 
 
-
+def plot():
     df = pd.DataFrame()
     df['date'] = pd.date_range(d0,d1,freq='D')
     df['CODG_ex'] = codgError[:,0]
