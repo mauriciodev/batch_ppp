@@ -20,7 +20,7 @@ class PPPBatchProcessor():
         self.config = config
 
     #This method is not really used, but it can be used to clean GNSS data.
-    def rinex_with_gps_only(self, rinexFile):
+    def rinex_with_gps_only(self, rinexFile:str):
         if not os.path.exists("Binary/teqc"):
             urllib.request.urlretrieve("https://www.unavco.org/software/data-processing/teqc/development/teqc_CentOSLx86_64s.zip", "Binary/teqc.zip")
             shutil.unpack_archive("Binary/teqc.zip", extract_dir='Binary')
@@ -31,7 +31,7 @@ class PPPBatchProcessor():
         subprocess.run(f'Binary/teqc -E -C -R -S -O.obs L1L2C1P2S1S2 +out {newFile} {rinexFile}', shell=True)
         return newFile
     
-    def temporaryConf(self, replaceDict, templateFile="template.conf", temporaryFile="temporary.conf"):
+    def temporaryConf(self, replaceDict:dict, templateFile:str="template.conf", temporaryFile:str="temporary.conf"):
         with open(templateFile, 'r') as template:
             template_text=template.read()
             for key, value in replaceDict.items():
@@ -39,7 +39,7 @@ class PPPBatchProcessor():
             with open(temporaryFile, 'w') as tempConf:
                 tempConf.write(template_text)
 
-    def downloadIonex(self, doy,year):
+    def downloadIonex(self, doy:int, year:int) -> str:
         baseurl=f"ftp://igs.ign.fr/pub/igs/products/ionosphere/{year}/{doy:03}/codg{doy:03}0.{year%100}i.Z"
         os.makedirs("ionex",exist_ok=True)
         local_filename = os.path.join("ionex",baseurl.split('/')[-1])
@@ -47,19 +47,19 @@ class PPPBatchProcessor():
         if not os.path.exists(dcb_file):
             print("Downloading ", baseurl, dcb_file)
             #urllib.request.urlretrieve(baseurl, local_filename)
-            get_ipython().system('wget $baseurl -O $local_filename')
+            #get_ipython().system('wget $baseurl -O $local_filename')
             print("Saved ",local_filename)
             if os.path.getsize(local_filename) == 0:
                 print("Trying to get rapid, because final ionex was not found.")
                 baseurl=baseurl.replace("codg","corg")
-                get_ipython().system('wget $baseurl -O $local_filename')
-            get_ipython().system('gunzip $local_filename -f')
+                #get_ipython().system('wget $baseurl -O $local_filename')
+            #get_ipython().system('gunzip $local_filename -f')
         return local_filename
     
-    def run_rt_ppp(self, ppp_executable, obsFile, outFile, template_conf, replaceDict, cwd = '.'):
+    def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, replaceDict:dict, cwd:str='.'):
         #rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
         if not os.path.exists(outFile):
-            temporaryConf(replaceDict, template_conf, 'temporary.inp')
+            self.temporaryConf(replaceDict, template_conf, 'temporary.inp')
             cmd = f"{ppp_executable} {obsFile} temporary.inp"
             #obsFile = rinex_with_gps_only(obsFile) #cleaning to leave only GPS data
             print(f"Running {cmd}")
@@ -69,10 +69,10 @@ class PPPBatchProcessor():
         pos = df[['X(m)', 'Y(m)', 'Z(m)']].mean(axis=0).to_numpy()
         return pos
 
-    def run_rtklib(self, ppp_executable, obsFile, navFile, template_conf, replaceDict, cwd = '.'):
+    def run_rtklib(self, ppp_executable:str, obsFile:str, navFile:str, template_conf:str, replaceDict:dict, cwd:str='.'):
         out_file = obsFile.split('.')[0]+'.rtklib'#'temp.obs'
         if not os.path.exists(out_file):
-            temporaryConf(replaceDict, template_conf, 'temporary.inp')
+            self.temporaryConf(replaceDict, template_conf, 'temporary.inp')
             cmd=f'{ppp_executable} -x 2 -y 0 -k temporary.inp -o {out_file} {obsFile} {navFile}'
             print(f"Running {cmd}")
             result=subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
@@ -86,17 +86,15 @@ class PPPBatchProcessor():
     def absError(self, m):
         return np.sqrt(np.sum(np.array(m)**2,axis=1))
 
-    def main(self, config):
-        #CONFIGURATION
-        if config['ppp_solution'] =='rt_ppp':
-            run_ppp_method = run_rt_ppp #this is a function
+    def main(self):
+        # Getting configs from the yaml file
+        if self.config['ppp_solution'] =='rt_ppp':
+            run_ppp_method = self.run_rt_ppp #this is a function
         elif config['ppp_solution'] == 'rtklib':
-            run_ppp_method = run_rtklib #this is a function
-        ppp_executable = config['ppp_executable'] #In windows: ..\rt_ppp.exe
+            run_ppp_method = self.run_rtklib #this is a function
+        ppp_executable = config['ppp_executable']
         run_folder = config['run_folder']
         template_conf = config['ppp_template_conf']
-            
-
         save_array_as = os.path.join(run_folder, config['experiment_name'])
         end_year = config['end_year']
         start_year = config['start_year']
@@ -107,7 +105,7 @@ class PPPBatchProcessor():
 
         print(f"Downloading data from IBGE for station {station}")
         for day in tqdm(pd.date_range(d0,d1,freq='D')):
-            link="""https://geoftp.ibge.gov.br/informacoes_sobre_posicionamento_geodesico/rbmc/dados/{2}/{0:03}/{1}{0:03}1.zip""".format(day.day_of_year,station,day.year)
+            link=f'https://geoftp.ibge.gov.br/informacoes_sobre_posicionamento_geodesico/rbmc/dados/{day.year}/{day.day_of_year:03}/{station}{day.day_of_year:03}1.zip'
             rbmcfile=link.split("/")[-1]
             zipFile=os.path.join(str(day.year),rbmcfile)
             os.makedirs(str(day.year),exist_ok=True)
@@ -117,8 +115,8 @@ class PPPBatchProcessor():
                     local_filename, headers = urllib.request.urlretrieve(link, zipFile)
                     if os.path.getsize(zipFile)<1024: os.unlink(zipFile)
                 except urllib.error.URLError as e:
-                    print(f"Failed {zipFile}. {link}")
-                    print("Error", e.reason)
+                    print(f"Failed {zipFile} from {link}")
+                    print(f"Error: {e.reason}")
                     if os.path.exists(zipFile):
                         os.unlink(zipFile)
             else:
@@ -181,4 +179,4 @@ if __name__ == "__main__":
     config = yaml.safe_load(parsed_args.c_config)
 
     ppp_processor = PPPBatchProcessor(config)
-    ppp_processor.main(config)
+    ppp_processor.main()

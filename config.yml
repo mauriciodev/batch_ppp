@@ -1,12 +1,23 @@
 experiment_name: rtklib_brdc
-ppp_solution: rtklib # either 'rt_ppp' or 'rtklib'
-#ppp_executable: rnx2rtkp #./rt_ppp.exe or rnx2rtkp
-ppp_executable: docker run -v ${PWD}/data:/data rtklib
+# ppp_solution can be either 'rt_ppp' or 'rtklib'
+ppp_solution: rtklib
+# ppp_executable can be set for linux, windows or docker
+# for linux: rnx2rtkp or rt_ppp
+# for windows: ./rnx2rtkp.exe or ./rt_ppp.exe
+# for docker: docker run -v ${PWD}/data:/data rtklib
+ppp_executable: docker run -v ${PWD}/data:/data rtklib:demo5
+# Broadcast template file
 ppp_template_conf: templates/rtklib_template_brdc.conf
+# Running folder
 run_folder: ./data
+# Start and End dates
 end_year: 2015
 start_year: 2015
+# Station to be processed
 station: onrj
-reference_position: [4283638.3610, -4026028.8230, -2466096.8370] #the PPP is going to start with this coordinate and errors are computed against it.
+# Reference position which PPP will use to start processing and to compute errors against it.
+reference_position: [4283638.3610, -4026028.8230, -2466096.8370]
+# Save results as numpy
 save_array_as: onrj_rtklib_brdc.npy
-ionex_pattern: codg{doy:03}0.{year%100}i.Z #optional, only for GIM-based ppp
+# Optional ionex pattern. Used only for GIM-based ppp
+ionex_pattern: codg{doy:03}0.{year%100}i.Z
