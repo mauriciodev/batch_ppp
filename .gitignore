@@ -161,3 +161,6 @@ cython_debug/
 
 # macOS hidden file
 .DS_Store
+
+# Ignore folders with 4 digit year number as name
+[0-9]{4}/
