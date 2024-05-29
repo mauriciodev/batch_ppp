@@ -96,17 +96,17 @@ class PPPBatchProcessor():
             run_ppp_method = self.run_rtklib #this is a function
         ppp_executable = self.config['ppp_executable']
         template_conf = self.config['ppp_template_conf']
-        temporary_conf = self.config['ppp_temporary_conf']
-        start_year = self.config['start_year']
-        end_year = self.config['end_year']
+        temporary_conf = os.path.join(run_folder,'temporary.inp')
+        start_date = self.config['start_date']
+        end_date = self.config['end_date']
         station = self.config['station']
         reference_position = self.config['reference_position']
         save_array_as = self.config['experiment_name']
         ionex_pattern = self.config['ionex_pattern']
         
         # Defining dates for Jan, 1st and Dec, 31st
-        d0=date(year=start_year, month=1, day=1)
-        d1=date(year=end_year, month=12, day=31)
+        d0=pd.to_datetime(start_date) #date(year=start_year, month=1, day=1)
+        d1=pd.to_datetime(end_date) #date(year=end_year, month=12, day=31)
 
         # Station folder
         station_folder = os.path.join(run_folder, station)
@@ -151,7 +151,7 @@ class PPPBatchProcessor():
         output_folder = os.path.join(experiment_folder, 'output')
 
         # Current folder
-        current_folder = os.path.join(experiment_folder, 'current')
+        #current_folder = os.path.join(experiment_folder, 'current')
 
         for day in tqdm(pd.date_range(d0,d1,freq='D')):
             os.makedirs(output_folder, exist_ok=True)
@@ -169,7 +169,7 @@ class PPPBatchProcessor():
             # Trying to unzip it
             try:
                 archive_path = os.path.join(year_folder, fname)
-                shutil.unpack_archive(archive_path, current_folder)
+                shutil.unpack_archive(archive_path, year_folder)
             except Exception as e:
                 print(f"Error unpacking archive {archive_path}: {e}")
                 error.append([np.nan,np.nan,np.nan])
@@ -180,9 +180,9 @@ class PPPBatchProcessor():
 
             y2d=day.year%100
             outFilePos=os.path.join(output_folder, f'{year}_{fname.replace(".zip",".pos")}')
-            obsFile=os.path.join(current_folder, fname.replace(".zip",f".{y2d}o"))
-            navFile=os.path.join(current_folder, fname.replace(".zip",f".{y2d}n"))
-            navFile2=os.path.join(current_folder, fname.replace(".zip",f".{y2d}g"))
+            obsFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}o"))
+            navFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}n"))
+            navFile2=os.path.join(year_folder, fname.replace(".zip",f".{y2d}g"))
             ionex=f"ionex/codg{day.day_of_year:03}0.{day.year%100}i"
 
             replaceDict = {

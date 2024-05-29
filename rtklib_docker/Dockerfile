@@ -21,6 +21,6 @@ ENTRYPOINT ["./rnx2rtkp"]
 #Run container
 FROM ubuntu:latest as rtklib
 #RUN apt-get -y update && apt-get install -y
-WORKDIR /app/
+WORKDIR /
 COPY --from=build /RTKLIB/app/consapp/rnx2rtkp/gcc/rnx2rtkp ./
 ENTRYPOINT ["./rnx2rtkp"]
