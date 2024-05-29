@@ -57,6 +57,7 @@ class PPPBatchProcessor():
                 tempConf.write(template_text)
 
     def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
+        out_file = obsFile.split('.')[0]+'.pos'#'temp.obs'
         #rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
         if not os.path.exists(outFile):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
@@ -70,7 +71,7 @@ class PPPBatchProcessor():
         return pos
 
     def run_rtklib(self, ppp_executable:str, obsFile:str, navFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
-        out_file = obsFile.split('.')[0]+'.rtklib'#'temp.obs'
+        out_file = obsFile.split('.')[0]+'.pos'#'temp.obs'
         if not os.path.exists(out_file):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
             cmd = f'{ppp_executable} -x 2 -y 0 -k {temporary_conf} -o {out_file} {obsFile} {navFile}'
@@ -101,7 +102,7 @@ class PPPBatchProcessor():
         end_date = self.config['end_date']
         station = self.config['station']
         reference_position = self.config['reference_position']
-        save_array_as = self.config['experiment_name']
+        save_array_as = self.config['save_array_as']
         ionex_pattern = self.config['ionex_pattern']
         
         # Defining dates for Jan, 1st and Dec, 31st
@@ -179,7 +180,7 @@ class PPPBatchProcessor():
             #downloadIonex(day.day_of_year,day.year)
 
             y2d=day.year%100
-            outFilePos=os.path.join(output_folder, f'{year}_{fname.replace(".zip",".pos")}')
+            outFilePos=os.path.join(year_folder, f'{fname.replace(".zip",".pos")}')
             obsFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}o"))
             navFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}n"))
             navFile2=os.path.join(year_folder, fname.replace(".zip",f".{y2d}g"))
@@ -193,6 +194,7 @@ class PPPBatchProcessor():
                 }
 
             position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, temporary_conf, replaceDict = replaceDict)
+            if os.path.exists(outFilePos): shutil.move(outFilePos, output_folder)
             error.append(position - reference_position)
 
         error = np.array(error)

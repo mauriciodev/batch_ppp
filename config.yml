@@ -12,7 +12,7 @@ ppp_executable: docker run -v ${PWD}/data:/data rtklib:demo5
 ppp_template_conf: templates/rtklib_template_brdc.conf
 # Start and End dates
 start_date: 2015-01-04 # YYYY-MM-DD
-end_date: 2015-12-31 # YYYY-MM-DD
+end_date: 2015-01-31 # YYYY-MM-DD
 # Station to be processed
 station: onrj
 # Reference position which PPP will use to start processing and to compute errors against it.
