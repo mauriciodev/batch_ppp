@@ -6,10 +6,12 @@ ppp_solution: rtklib
 # ppp_executable can be set for linux, windows or docker
 # for linux: rnx2rtkp or rt_ppp
 # for windows: ./rnx2rtkp.exe or ./rt_ppp.exe
-# for docker: docker run -v ${PWD}/data:/data rtklib
+# for docker: docker run -v ${PWD}/{run_folder}:/data rtklib
 ppp_executable: docker run -v ${PWD}/data:/data rtklib:demo5
-# Broadcast template file
+# Template file
 ppp_template_conf: data/templates/rtklib_template_brdc.conf
+# Temporary configuration file
+ppp_temporary_conf: data/rtklib_brdc/temporary.inp
 # Start and End dates
 start_year: 2015
 end_year: 2015

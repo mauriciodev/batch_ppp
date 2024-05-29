@@ -31,14 +31,6 @@ class PPPBatchProcessor():
         subprocess.run(f'Binary/teqc -E -C -R -S -O.obs L1L2C1P2S1S2 +out {newFile} {rinexFile}', shell=True)
         return newFile
     
-    def temporaryConf(self, replaceDict:dict, templateFile:str="template.conf", temporaryFile:str="temporary.conf") -> None:
-        with open(templateFile, 'r') as template:
-            template_text=template.read()
-            for key, value in replaceDict.items():
-                template_text=template_text.replace(key, str(value))
-            with open(temporaryFile, 'w') as tempConf:
-                tempConf.write(template_text)
-
     def downloadIonex(self, doy:int, year:int) -> str:
         baseurl=f"ftp://igs.ign.fr/pub/igs/products/ionosphere/{year}/{doy:03}/codg{doy:03}0.{year%100}i.Z"
         os.makedirs("ionex",exist_ok=True)
@@ -56,26 +48,34 @@ class PPPBatchProcessor():
             #get_ipython().system('gunzip $local_filename -f')
         return local_filename
     
-    def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, replaceDict:dict, cwd:str='.'):
+    def temporaryConf(self, replaceDict:dict, temporaryFile:str, templateFile:str='data/templates/rtklib_template_brdc.conf') -> None:
+        with open(templateFile, 'r') as template:
+            template_text=template.read()
+            for key, value in replaceDict.items():
+                template_text=template_text.replace(key, str(value))
+            with open(temporaryFile, 'w') as tempConf:
+                tempConf.write(template_text)
+
+    def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
         #rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
         if not os.path.exists(outFile):
-            self.temporaryConf(replaceDict, template_conf, 'temporary.inp')
-            cmd = f"{ppp_executable} {obsFile} temporary.inp"
+            self.temporaryConf(replaceDict, temporary_conf, template_conf)
+            cmd = f"{ppp_executable} {obsFile} {temporary_conf}"
             #obsFile = rinex_with_gps_only(obsFile) #cleaning to leave only GPS data
             print(f"Running {cmd}")
-            result=subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
+            result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
             os.rename('output/RT_PPP.out', outFile)
         df = pd.read_csv(outFile, comment='%', sep='\s+', parse_dates=True, header='infer')
         pos = df[['X(m)', 'Y(m)', 'Z(m)']].mean(axis=0).to_numpy()
         return pos
 
-    def run_rtklib(self, ppp_executable:str, obsFile:str, navFile:str, template_conf:str, replaceDict:dict, cwd:str='.'):
+    def run_rtklib(self, ppp_executable:str, obsFile:str, navFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
         out_file = obsFile.split('.')[0]+'.rtklib'#'temp.obs'
         if not os.path.exists(out_file):
-            self.temporaryConf(replaceDict, template_conf, 'temporary.inp')
-            cmd=f'{ppp_executable} -x 2 -y 0 -k temporary.inp -o {out_file} {obsFile} {navFile}'
+            self.temporaryConf(replaceDict, temporary_conf, template_conf)
+            cmd = f'{ppp_executable} -x 2 -y 0 -k {temporary_conf} -o {out_file} {obsFile} {navFile}'
             print(f"Running {cmd}")
-            result=subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
+            result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
         if not os.path.exists(out_file):
             return np.array([np.nan, np.nan, np.nan])
         header = ['GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
@@ -96,6 +96,7 @@ class PPPBatchProcessor():
             run_ppp_method = self.run_rtklib #this is a function
         ppp_executable = self.config['ppp_executable']
         template_conf = self.config['ppp_template_conf']
+        temporary_conf = self.config['ppp_temporary_conf']
         start_year = self.config['start_year']
         end_year = self.config['end_year']
         station = self.config['station']
@@ -158,10 +159,23 @@ class PPPBatchProcessor():
             year=str(day.year)
             year_folder = os.path.join(station_folder, year)
             fname=f'{station}{day.day_of_year:03}1.zip'
+
+            # Checking if the file exists
             if not os.path.exists(os.path.join(year_folder, fname)):
-                error.append([0,0,0])
+                error.append([np.nan,np.nan,np.nan])
                 print(day,day.day_of_year)
                 continue
+
+            # Trying to unzip it
+            try:
+                archive_path = os.path.join(year_folder, fname)
+                shutil.unpack_archive(archive_path, current_folder)
+            except Exception as e:
+                print(f"Error unpacking archive {archive_path}: {e}")
+                error.append([np.nan,np.nan,np.nan])
+                print(day,day.day_of_year)
+                continue
+
             #downloadIonex(day.day_of_year,day.year)
 
             y2d=day.year%100
@@ -171,9 +185,6 @@ class PPPBatchProcessor():
             navFile2=os.path.join(current_folder, fname.replace(".zip",f".{y2d}g"))
             ionex=f"ionex/codg{day.day_of_year:03}0.{day.year%100}i"
 
-            # Unzipping the station file to the current folder
-            shutil.unpack_archive(os.path.join(year_folder, fname), current_folder)
-
             replaceDict = {
                 '{ionex}': ionex,
                 '{x0}' : reference_position[0],
@@ -181,7 +192,7 @@ class PPPBatchProcessor():
                 '{z0}' : reference_position[2],
                 }
 
-            position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, replaceDict = replaceDict)
+            position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, temporary_conf, replaceDict = replaceDict)
             error.append(position - reference_position)
 
         error = np.array(error)
