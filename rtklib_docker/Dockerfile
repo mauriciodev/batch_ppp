@@ -1,5 +1,7 @@
 # Using the latest Ubuntu as base
-FROM ubuntu:latest
+FROM ubuntu:latest as build
+ENV DEBIAN_FRONTEND=noninteractive 
+
 # Updating apt
 RUN apt-get update
 # Installing base packages
@@ -13,4 +15,12 @@ WORKDIR /RTKLIB/app/consapp/rnx2rtkp/gcc/
 # Building rtklib
 RUN make -j4
 # Defining the command that will be executed when running the images
+ENTRYPOINT ["./rnx2rtkp"]
+
+
+#Run container
+FROM ubuntu:latest as rtklib
+#RUN apt-get -y update && apt-get install -y
+WORKDIR /app/
+COPY --from=build /RTKLIB/app/consapp/rnx2rtkp/gcc/rnx2rtkp ./
 ENTRYPOINT ["./rnx2rtkp"]
