@@ -50,13 +50,13 @@ class Preprocessor():
             else:
                 print(f"skipping {zipFile}")        
 
-    def download_ionex(self) -> None:
+    def download_ionex(self, prefix='codg') -> None:
         ionex_folder = self.config['ionex_folder']
 
         d0, d1 = self.get_dates()
 
         for day in tqdm(pd.date_range(d0,d1,freq='D')):
-            baseurl = f'ftp://igs.ign.fr/pub/igs/products/ionosphere/{day.year}/{day.day_of_year:03}/codg{day.day_of_year:03}0.{day.year%100}i.Z'
+            baseurl = f'ftp://igs.ign.fr/pub/igs/products/ionosphere/{day.year}/{day.day_of_year:03}/{prefix}{day.day_of_year:03}0.{day.year%100}i.Z'
             os.makedirs(ionex_folder, exist_ok=True)
             local_filename = os.path.join(ionex_folder, baseurl.split('/')[-1])
             dcb_file = local_filename.replace('.Z','')
@@ -66,7 +66,7 @@ class Preprocessor():
                 print(f'File saved to {local_filename}')
                 if os.path.getsize(local_filename) == 0:
                     print('Trying to get rapid, because final ionex was not found.')
-                    baseurl=baseurl.replace("codg","corg")
+                    baseurl=baseurl.replace(prefix,"corg")
                     request.urlretrieve(baseurl, local_filename)
 
                 subprocess.run(f'gunzip {local_filename} -f', shell=True)
@@ -80,4 +80,5 @@ if __name__ == '__main__':
 
     preprocessor = Preprocessor(config)
     preprocessor.download_station()
-    preprocessor.download_ionex()
+    preprocessor.download_ionex(prefix='codg')
+    preprocessor.download_ionex(prefix='c1pg')

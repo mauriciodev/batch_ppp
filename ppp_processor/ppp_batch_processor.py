@@ -62,7 +62,7 @@ class PPPBatchProcessor():
             result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
         if not os.path.exists(out_file):
             return np.array([np.nan, np.nan, np.nan])
-        header = ['GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
+        header = ['date', 'GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
         df = pd.read_csv(out_file, comment='%', sep='\s+', parse_dates=True, names=header)#header='infer')
         pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].mean(axis=0).to_numpy()
         return pos
@@ -104,6 +104,7 @@ class PPPBatchProcessor():
         reference_position = self.config['reference_position']
         save_array_as = self.config['save_array_as']
         ionex_pattern = self.config['ionex_pattern']
+        ionex_folder = self.config['ionex_pattern']
         
         # Getting dates
         d0, d1 = self.get_dates()
@@ -150,8 +151,7 @@ class PPPBatchProcessor():
             obsFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}o"))
             navFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}n"))
             navFile2=os.path.join(year_folder, fname.replace(".zip",f".{y2d}g"))
-            ionex=f"ionex/codg{day.day_of_year:03}0.{day.year%100}i"
-
+            ionex=os.path.join(config['ionex_folder'], config['ionex_pattern'].format(doy=day.day_of_year, y2d=day.year%100))#f"ionex/codg{day.day_of_year:03}0.{day.year%100}i"
             replaceDict = {
                 '{ionex}': ionex,
                 '{x0}' : reference_position[0],
@@ -160,7 +160,10 @@ class PPPBatchProcessor():
                 }
 
             position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, temporary_conf, replaceDict = replaceDict)
-            if os.path.exists(outFilePos): shutil.move(outFilePos, output_folder)
+            if os.path.exists(outFilePos): 
+                move_file = os.path.join(output_folder, os.path.split(outFilePos)[-1])
+                if os.path.exists(move_file): os.unlink(move_file)
+                shutil.move(outFilePos, output_folder)
             error.append(position - reference_position)
 
         error = np.array(error)

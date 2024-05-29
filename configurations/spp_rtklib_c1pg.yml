@@ -1,5 +1,5 @@
 # Experiment configurations
-experiment_name: rtklib_brdc
+experiment_name: spp_rtklib_c1pg
 # Running folder
 run_folder: data
 # ppp_solution can be either 'rt_ppp' or 'rtklib'
@@ -10,15 +10,17 @@ ppp_solution: rtklib
 # for docker: docker run -v ${PWD}/{run_folder}:/data rtklib
 ppp_executable: docker run -v ${PWD}/data:/data rtklib:demo5
 # Template file
-ppp_template_conf: templates/rtklib_template_brdc.conf
+ppp_template_conf: templates/rtklib_template_ionex.conf
 # Start and End dates
 start_date: 2015-01-04 # YYYY-MM-DD
-end_date: 2015-01-31 # YYYY-MM-DD
+end_date: 2015-12-31 # YYYY-MM-DD
 # Station to be processed
 station: onrj
 # Reference position which PPP will use to start processing and to compute errors against it.
 reference_position: [4283638.3610, -4026028.8230, -2466096.8370]
 # Save results as numpy
-save_array_as: data/rtklib_brdc/onrj.npy
+save_array_as: data/spp_rtklib_c1pg/onrj.npy
 # Optional ionex pattern. Used only for GIM-based ppp
-ionex_pattern: codg{doy:03}0.{year%100}i.Z
+ionex_pattern: c1pg{doy:03}0.{y2d:02}i
+# Ionex folder
+ionex_folder: data/ionex

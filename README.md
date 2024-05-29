@@ -31,4 +31,7 @@ config.yml
 templates/rtklib_template_brdc.conf  
 
 # Run
-python ppp_batch.py -c config.yml
+python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_ionex.yml  
+python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_c1pg.yml  
+python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_brdc.yml  
+
