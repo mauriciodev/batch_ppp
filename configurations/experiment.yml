@@ -1,3 +1,4 @@
+# Experiment configurations
 experiment_name: rtklib_brdc
 # Running folder
 run_folder: data

@@ -31,23 +31,6 @@ class PPPBatchProcessor():
         subprocess.run(f'Binary/teqc -E -C -R -S -O.obs L1L2C1P2S1S2 +out {newFile} {rinexFile}', shell=True)
         return newFile
     
-    def downloadIonex(self, doy:int, year:int) -> str:
-        baseurl=f"ftp://igs.ign.fr/pub/igs/products/ionosphere/{year}/{doy:03}/codg{doy:03}0.{year%100}i.Z"
-        os.makedirs("ionex",exist_ok=True)
-        local_filename = os.path.join("ionex",baseurl.split('/')[-1])
-        dcb_file=local_filename.replace('.Z','')
-        if not os.path.exists(dcb_file):
-            print("Downloading ", baseurl, dcb_file)
-            #urllib.request.urlretrieve(baseurl, local_filename)
-            #get_ipython().system('wget $baseurl -O $local_filename')
-            print("Saved ",local_filename)
-            if os.path.getsize(local_filename) == 0:
-                print("Trying to get rapid, because final ionex was not found.")
-                baseurl=baseurl.replace("codg","corg")
-                #get_ipython().system('wget $baseurl -O $local_filename')
-            #get_ipython().system('gunzip $local_filename -f')
-        return local_filename
-    
     def temporaryConf(self, replaceDict:dict, temporaryFile:str, templateFile:str='data/templates/rtklib_template_brdc.conf') -> None:
         with open(templateFile, 'r') as template:
             template_text=template.read()
@@ -86,6 +69,25 @@ class PPPBatchProcessor():
 
     def absError(self, m):
         return np.sqrt(np.sum(np.array(m)**2,axis=1))
+    
+    def get_dates(self) -> tuple[pd.Timestamp, pd.Timestamp]:
+        start_date = self.config['start_date']
+        end_date = self.config['end_date']
+
+        # Defining dates for Jan, 1st and Dec, 31st
+        d0=pd.to_datetime(start_date) #date(year=start_year, month=1, day=1)
+        d1=pd.to_datetime(end_date) #date(year=end_year, month=12, day=31)
+
+        return d0, d1
+    
+    def test_executable(self, ppp_executable):
+        # Checking if the executable is available
+        test_run = subprocess.run(ppp_executable, shell=True)
+        if test_run.returncode==127:
+            print(f"Could not find a PPP executable in {ppp_executable}.")
+            sys.exit(0)
+        else:
+            print(f"Using PPP executable: {ppp_executable}.")
 
     def main(self):
         # Getting configs from the yaml file
@@ -98,16 +100,13 @@ class PPPBatchProcessor():
         ppp_executable = self.config['ppp_executable']
         template_conf = self.config['ppp_template_conf']
         temporary_conf = os.path.join(run_folder,'temporary.inp')
-        start_date = self.config['start_date']
-        end_date = self.config['end_date']
         station = self.config['station']
         reference_position = self.config['reference_position']
         save_array_as = self.config['save_array_as']
         ionex_pattern = self.config['ionex_pattern']
         
-        # Defining dates for Jan, 1st and Dec, 31st
-        d0=pd.to_datetime(start_date) #date(year=start_year, month=1, day=1)
-        d1=pd.to_datetime(end_date) #date(year=end_year, month=12, day=31)
+        # Getting dates
+        d0, d1 = self.get_dates()
 
         # Station folder
         station_folder = os.path.join(run_folder, station)
@@ -115,44 +114,13 @@ class PPPBatchProcessor():
         # Experiment folder
         experiment_folder = os.path.join(run_folder, experiment_name)
 
-        print(f"Running in {run_folder}...")
-        print(f"Downloading data from IBGE for station {station}...")
-        for day in tqdm(pd.date_range(d0,d1,freq='D')):
-            link=f'https://geoftp.ibge.gov.br/informacoes_sobre_posicionamento_geodesico/rbmc/dados/{day.year}/{day.day_of_year:03}/{station}{day.day_of_year:03}1.zip'
-            rbmcfile=link.split("/")[-1]
-            year_folder = os.path.join(station_folder, str(day.year))
-            zipFile=os.path.join(year_folder, rbmcfile)
-            os.makedirs(year_folder, exist_ok=True)
-            if not os.path.exists(zipFile) or os.path.getsize(zipFile)<1024:
-                try:
-                    urllib.request.urlcleanup()
-                    local_filename, headers = urllib.request.urlretrieve(link, zipFile)
-                    if os.path.getsize(zipFile)<1024: os.unlink(zipFile)
-                except urllib.error.URLError as e:
-                    print(f"Failed {zipFile} from {link}")
-                    print(f"Error: {e.reason}")
-                    if os.path.exists(zipFile):
-                        os.unlink(zipFile)
-            else:
-                print(f"skipping {zipFile}")        
-
         # Checking if the executable is available
-        test_run = subprocess.run(ppp_executable, shell=True)
-        if test_run.returncode==127:
-            print(f"Could not find a PPP executable in {ppp_executable}.")
-            sys.exit(0)
-        else:
-            print(f"Using PPP executable: {ppp_executable}.")
+        self.test_executable(ppp_executable)
 
         error=[]
 
-        #basecommand="./rnx2rtkp -x 0 -y 0 -k "
-
         # Output folder
         output_folder = os.path.join(experiment_folder, 'output')
-
-        # Current folder
-        #current_folder = os.path.join(experiment_folder, 'current')
 
         for day in tqdm(pd.date_range(d0,d1,freq='D')):
             os.makedirs(output_folder, exist_ok=True)
@@ -177,8 +145,6 @@ class PPPBatchProcessor():
                 print(day,day.day_of_year)
                 continue
 
-            #downloadIonex(day.day_of_year,day.year)
-
             y2d=day.year%100
             outFilePos=os.path.join(year_folder, f'{fname.replace(".zip",".pos")}')
             obsFile=os.path.join(year_folder, fname.replace(".zip",f".{y2d}o"))
@@ -201,11 +167,10 @@ class PPPBatchProcessor():
         np.save(save_array_as, error)
 
 if __name__ == "__main__":
-    
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('-c' '-config',  type=argparse.FileType('r'), default='config.yml')
+    parser.add_argument('-c' '-config',  type=argparse.FileType('r'), default='configurations/experiment.yml')
     parsed_args = parser.parse_args()
+
     config = yaml.safe_load(parsed_args.c_config)
 
     ppp_processor = PPPBatchProcessor(config)
