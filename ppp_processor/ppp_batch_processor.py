@@ -16,8 +16,9 @@ import matplotlib.pyplot as plt
 import yaml
 
 class PPPBatchProcessor():
-    def __init__(self, config) -> None:
+    def __init__(self, config, update_pos=False) -> None:
         self.config = config
+        self.update_pos = update_pos
 
     #This method is not really used, but it can be used to clean GNSS data.
     def rinex_with_gps_only(self, rinexFile:str):
@@ -42,7 +43,7 @@ class PPPBatchProcessor():
     def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
         out_file = obsFile.split('.')[0]+'.pos'#'temp.obs'
         #rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
-        if not os.path.exists(outFile):
+        if not os.path.exists(outFile) or (self.update_pos==True):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
             cmd = f"{ppp_executable} {obsFile} {temporary_conf}"
             #obsFile = rinex_with_gps_only(obsFile) #cleaning to leave only GPS data
@@ -50,21 +51,34 @@ class PPPBatchProcessor():
             result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
             os.rename('output/RT_PPP.out', outFile)
         df = pd.read_csv(outFile, comment='%', sep='\s+', parse_dates=True, header='infer')
-        pos = df[['X(m)', 'Y(m)', 'Z(m)']].mean(axis=0).to_numpy()
+        pos = df[['X(m)', 'Y(m)', 'Z(m)']].to_numpy().mean(axis=0) #.mean(axis=0)
         return pos
 
-    def run_rtklib(self, ppp_executable:str, obsFile:str, navFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
+    def run_rtklib(self, ppp_executable:str, obsFile:str, navFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.', groups_per_file:int=12, move_to='.'):
         out_file = obsFile.split('.')[0]+'.pos'#'temp.obs'
-        if not os.path.exists(out_file):
+        move_file = os.path.join(move_to, os.path.split(out_file)[-1])
+        if not os.path.exists(move_file) or (self.update_pos==True):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
             cmd = f'{ppp_executable} -x 2 -y 0 -k {temporary_conf} -o {out_file} {obsFile} {navFile}'
             print(f"Running {cmd}")
             result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
         if not os.path.exists(out_file):
-            return np.array([np.nan, np.nan, np.nan])
+            #return np.array([np.nan, np.nan, np.nan])
+            return np.repeat([[np.nan, np.nan, np.nan]], axis=0, repeats=groups_per_file)
+        
+        
+        if os.path.exists(out_file): 
+            if os.path.exists(move_file): os.unlink(move_file)
+            shutil.move(out_file, move_to)
+        
         header = ['date', 'GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
-        df = pd.read_csv(out_file, comment='%', sep='\s+', parse_dates=True, names=header)#header='infer')
-        pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].mean(axis=0).to_numpy()
+        df = pd.read_csv(move_file, comment='%', sep='\s+', parse_dates=['date'], names=header)#header='infer')
+        df['GPST'] = pd.to_datetime(df['GPST'], format='%H:%M:%S.%f')
+        
+        df_grouped = df.groupby([pd.Grouper(key='GPST', freq='2H')])
+        
+        pos = df_grouped.mean(['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)'])[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].to_numpy() #.mean(axis=0)
+        #pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].to_numpy().mean(axis=0) #.mean(axis=0)
         return pos
 
     def absError(self, m):
@@ -159,11 +173,8 @@ class PPPBatchProcessor():
                 '{z0}' : reference_position[2],
                 }
 
-            position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, temporary_conf, replaceDict = replaceDict)
-            if os.path.exists(outFilePos): 
-                move_file = os.path.join(output_folder, os.path.split(outFilePos)[-1])
-                if os.path.exists(move_file): os.unlink(move_file)
-                shutil.move(outFilePos, output_folder)
+            position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, temporary_conf, replaceDict = replaceDict, move_to=output_folder)
+
             error.append(position - reference_position)
 
         error = np.array(error)
