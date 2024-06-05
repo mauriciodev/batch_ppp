@@ -8,7 +8,7 @@ ppp_solution: rtklib
 # for linux: rnx2rtkp or rt_ppp
 # for windows: ./rnx2rtkp.exe or ./rt_ppp.exe
 # for docker: docker run -v ${PWD}/{run_folder}:/data rtklib
-ppp_executable: docker run -v ${PWD}/data:/data rtklib:demo5
+ppp_executable: docker exec rtklib /rnx2rtkp
 # Template file
 ppp_template_conf: templates/rtklib_template_ionex.conf
 # Start and End dates

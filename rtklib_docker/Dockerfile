@@ -23,4 +23,9 @@ FROM ubuntu:latest as rtklib
 #RUN apt-get -y update && apt-get install -y
 WORKDIR /
 COPY --from=build /RTKLIB/app/consapp/rnx2rtkp/gcc/rnx2rtkp ./
-ENTRYPOINT ["./rnx2rtkp"]
+#ENTRYPOINT ["./rnx2rtkp"]
+
+
+#USAGE: 
+# docker run -d -it -v ${PWD}/data:/data --name rtklib rtklib:demo5
+# docker exec rtklib /rnx2rtkp --help

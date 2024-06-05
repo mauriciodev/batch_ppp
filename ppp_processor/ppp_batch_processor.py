@@ -40,8 +40,9 @@ class PPPBatchProcessor():
             with open(temporaryFile, 'w') as tempConf:
                 tempConf.write(template_text)
 
-    def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.'):
+    def run_rt_ppp(self, ppp_executable:str, obsFile:str, outFile:str, template_conf:str, temporary_conf:str, replaceDict:dict, cwd:str='.', move_to='.'):
         out_file = obsFile.split('.')[0]+'.pos'#'temp.obs'
+        move_file = os.path.join(move_to, os.path.split(out_file)[-1])
         #rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
         if not os.path.exists(outFile) or (self.update_pos==True):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
@@ -50,6 +51,9 @@ class PPPBatchProcessor():
             print(f"Running {cmd}")
             result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
             os.rename('output/RT_PPP.out', outFile)
+        if os.path.exists(out_file): 
+            if os.path.exists(move_file): os.unlink(move_file)
+            shutil.move(out_file, move_to)
         df = pd.read_csv(outFile, comment='%', sep='\s+', parse_dates=True, header='infer')
         pos = df[['X(m)', 'Y(m)', 'Z(m)']].to_numpy().mean(axis=0) #.mean(axis=0)
         return pos
@@ -59,17 +63,15 @@ class PPPBatchProcessor():
         move_file = os.path.join(move_to, os.path.split(out_file)[-1])
         if not os.path.exists(move_file) or (self.update_pos==True):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
-            cmd = f'{ppp_executable} -x 2 -y 0 -k {temporary_conf} -o {out_file} {obsFile} {navFile}'
+            cmd = f'{ppp_executable} -x 2 -y 0 -k {temporary_conf} -o {move_file} {obsFile} {navFile}'
             print(f"Running {cmd}")
             result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
-        if not os.path.exists(out_file):
+        if not os.path.exists(move_file):
             #return np.array([np.nan, np.nan, np.nan])
             return np.repeat([[np.nan, np.nan, np.nan]], axis=0, repeats=groups_per_file)
         
         
-        if os.path.exists(out_file): 
-            if os.path.exists(move_file): os.unlink(move_file)
-            shutil.move(out_file, move_to)
+
         
         header = ['date', 'GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
         df = pd.read_csv(move_file, comment='%', sep='\s+', parse_dates=['date'], names=header)#header='infer')

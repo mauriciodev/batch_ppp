@@ -10,8 +10,16 @@ docker build rtklib_docker -t rtklib:demo5
 ### Checking the docker image
 docker images
 
-### Running the image with the data folder as volume to check the installation
-docker run -v ${PWD}/data:/data rtklib:demo5 --help
+
+### Running the image with the data folder as volume to check the installation (first run only)
+docker run -d -it -v ${PWD}/data:/data --name rtklib rtklib:demo5
+
+
+### Running the container already created
+docker start rtklib
+
+### Testing if the daemon is reponding
+docker exec rtklib /rnx2rtkp --help
 
 ## Locally
 ### Download and install rtklib explorer
@@ -31,6 +39,7 @@ config.yml
 templates/rtklib_template_brdc.conf  
 
 # Run
+docker start rtklib
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_ionex.yml  
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_c1pg.yml  
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_brdc.yml  
