@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import yaml
 
-def plot(file_list, label_list, fname='plot.png', frequency='2H'):
+def plot(file_list, label_list, fname='plot.png', frequency='1D'): #2H
     fig, axs = plt.subplots(4)
     #fig.suptitle('Vertically stacked subplots')
     for ax in axs:
@@ -50,24 +50,17 @@ if __name__=="__main__":
           'rtklib_brdc', 
           'spp_rtklib_ionex',
           'spp_rtklib_c1pg'
-         ], 'plot3.pdf', frequency='2H')
+         ], 'plot_igs.pdf', frequency='2H')
     plot([
-      'data/spp_rtklib_ionex/onrj.parquet',
-      'data/spp_rtklib_c1pg/onrj.parquet'
-      ],[
-      'spp_rtklib_ionex',
-      'spp_rtklib_c1pg'
-     ], 'plot_igs.pdf')
-    plot([
-      'data/spp_rtklib_ionex/onrj.parquet',
       'data/spp_rtklib_c1pg/onrj.parquet',
-      'data/spp_rtklib_unet/onrj.parquet',
+      'data/unet/onrj.parquet',
+      'data/spp_rtklib_ionex/onrj.parquet',
       ],[
-      'spp_rtklib_ionex',
       'spp_rtklib_c1pg',
       'spp_rtklib_unet',
+      'spp_rtklib_ionex',
      ], 'plot_unet.pdf')
-    plot([
+    """plot([
       'data/spp_rtklib_ionex/onrj.parquet',
       'data/spp_rtklib_c1pg/onrj.parquet',
       'data/spp_rtklib_simvp/onrj.parquet',
@@ -75,13 +68,16 @@ if __name__=="__main__":
       'spp_rtklib_ionex',
       'spp_rtklib_c1pg',
       'spp_rtklib_simvp',
-     ], 'plot_simvp.pdf')
+     ], 'plot_simvp.pdf')"""
     plot([
-      'data/spp_rtklib_ionex/onrj.parquet',
+      #'data/rtklib_brdc/onrj.parquet',
       'data/spp_rtklib_c1pg/onrj.parquet',
       'data/edconvlstm_nd/onrj.parquet',
+      'data/spp_rtklib_ionex/onrj.parquet',
+      #'data/spp_rtklib_c1pg/onrj.parquet',
       ],[
-      'spp_rtklib_ionex',
+      #'brdc',
       'spp_rtklib_c1pg',
       'spp_rtklib_edconvlstm_nd',
+      'spp_rtklib_ionex',
      ], 'plot_nd.pdf')
