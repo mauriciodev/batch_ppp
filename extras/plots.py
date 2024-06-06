@@ -54,8 +54,8 @@ if __name__ == "__main__":
             "data/spp_rtklib_c1pg/onrj.parquet",
         ],
         ["rtklib_brdc", "spp_rtklib_ionex", "spp_rtklib_c1pg"],
-        "plot_igs.pdf",
-        frequency="2H",
+        "extras/plot_igs.pdf",
+        frequency="2h",
     )
     plot(
         [
@@ -68,17 +68,21 @@ if __name__ == "__main__":
             "spp_rtklib_unet",
             "spp_rtklib_ionex",
         ],
-        "plot_unet.pdf",
+        "extras/plot_unet.pdf",
     )
-    """plot([
-      'data/spp_rtklib_ionex/onrj.parquet',
-      'data/spp_rtklib_c1pg/onrj.parquet',
-      'data/spp_rtklib_simvp/onrj.parquet',
-      ],[
-      'spp_rtklib_ionex',
-      'spp_rtklib_c1pg',
-      'spp_rtklib_simvp',
-     ], 'plot_simvp.pdf')"""
+    plot(
+        [
+            "data/spp_rtklib_ionex/onrj.parquet",
+            "data/spp_rtklib_c1pg/onrj.parquet",
+            "data/spp_rtklib_simvp/onrj.parquet",
+        ],
+        [
+            "spp_rtklib_ionex",
+            "spp_rtklib_c1pg",
+            "spp_rtklib_simvp",
+        ],
+        "extras/plot_simvp.pdf",
+    )
     plot(
         [
             #'data/rtklib_brdc/onrj.parquet',
@@ -93,5 +97,5 @@ if __name__ == "__main__":
             "spp_rtklib_edconvlstm_nd",
             "spp_rtklib_ionex",
         ],
-        "plot_nd.pdf",
+        "extras/plot_nd.pdf",
     )
