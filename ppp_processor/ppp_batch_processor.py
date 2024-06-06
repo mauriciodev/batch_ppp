@@ -68,20 +68,16 @@ class PPPBatchProcessor():
             result = subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=cwd)
         if not os.path.exists(move_file):
             #return np.array([np.nan, np.nan, np.nan])
-            return np.repeat([[np.nan, np.nan, np.nan]], axis=0, repeats=groups_per_file)
-        
-        
+            return None #np.repeat([[np.nan, np.nan, np.nan]], axis=0, repeats=groups_per_file)
 
+        header = ['date', 'GPST', 'X(m)', 'Y(m)', 'Z(m)' , 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
+        df = pd.read_csv(move_file, comment='%', sep='\s+',  names=header)#header='infer') parse_dates=['date'],
+        df['datetime'] = pd.to_datetime(df['date'].astype(str)+' '+df['GPST'].astype(str), format='%Y/%m/%d %H:%M:%S.%f')
+        #df_grouped = df.groupby([pd.Grouper(key='GPST', freq='2H')])
         
-        header = ['date', 'GPST', 'x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)', 'Q', 'ns', 'sdx(m)', 'sdy(m)', 'sdz(m)', 'sdxy(m)', 'sdyz(m)', 'sdzx(m)', 'age(s)', 'ratio']
-        df = pd.read_csv(move_file, comment='%', sep='\s+', parse_dates=['date'], names=header)#header='infer')
-        df['GPST'] = pd.to_datetime(df['GPST'], format='%H:%M:%S.%f')
-        
-        df_grouped = df.groupby([pd.Grouper(key='GPST', freq='2H')])
-        
-        pos = df_grouped.mean(['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)'])[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].to_numpy() #.mean(axis=0)
+        #pos = df_grouped.mean(['X(m)', 'Y(m)', 'Z(m)'])[['X(m)', 'Y(m)', 'Z(m)']].to_numpy() #.mean(axis=0)
         #pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].to_numpy().mean(axis=0) #.mean(axis=0)
-        return pos
+        return  df[['datetime','X(m)', 'Y(m)', 'Z(m)']]
 
     def absError(self, m):
         return np.sqrt(np.sum(np.array(m)**2,axis=1))
@@ -148,7 +144,7 @@ class PPPBatchProcessor():
 
             # Checking if the file exists
             if not os.path.exists(os.path.join(year_folder, fname)):
-                error.append([np.nan,np.nan,np.nan])
+                #error.append([np.nan,np.nan,np.nan])
                 print(day,day.day_of_year)
                 continue
 
@@ -158,7 +154,7 @@ class PPPBatchProcessor():
                 shutil.unpack_archive(archive_path, year_folder)
             except Exception as e:
                 print(f"Error unpacking archive {archive_path}: {e}")
-                error.append([np.nan,np.nan,np.nan])
+                #error.append([np.nan,np.nan,np.nan])
                 print(day,day.day_of_year)
                 continue
 
@@ -176,11 +172,15 @@ class PPPBatchProcessor():
                 }
 
             position = run_ppp_method(ppp_executable, obsFile, navFile, template_conf, temporary_conf, replaceDict = replaceDict, move_to=output_folder)
+            if not position is None:
+                error.append(position)  #- reference_position
 
-            error.append(position - reference_position)
-
-        error = np.array(error)
-        np.save(save_array_as, error)
+        #error = np.array(error)
+        final_df = pd.concat(error).set_index('datetime')
+        final_df['X(m)']-=reference_position[0]
+        final_df['Y(m)']-=reference_position[1]
+        final_df['Z(m)']-=reference_position[2]
+        final_df.to_parquet(save_array_as)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -189,5 +189,5 @@ if __name__ == "__main__":
 
     config = yaml.safe_load(parsed_args.c_config)
 
-    ppp_processor = PPPBatchProcessor(config)
+    ppp_processor = PPPBatchProcessor(config, update_pos=False)
     ppp_processor.main()

@@ -19,7 +19,7 @@ station: onrj
 # Reference position which PPP will use to start processing and to compute errors against it.
 reference_position: [4283638.3610, -4026028.8230, -2466096.8370]
 # Save results as numpy
-save_array_as: data/spp_rtklib_c1pg/onrj.npy
+save_array_as: data/spp_rtklib_c1pg/onrj.parquet
 # Optional ionex pattern. Used only for GIM-based ppp
 ionex_pattern: c1pg{doy:03}0.{y2d:02}i
 # Ionex folder
