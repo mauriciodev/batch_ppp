@@ -73,6 +73,7 @@ if __name__ == "__main__":
             "spp_rtklib_ionex",
         ],
         "extras/plot_unet.pdf",
+        frequency="2h",
     )
     plot(
         [
@@ -86,6 +87,7 @@ if __name__ == "__main__":
             "spp_rtklib_ionex",
         ],
         "extras/plot_simvp.pdf",
+        frequency="2h",
     )
     plot(
         [
@@ -99,4 +101,5 @@ if __name__ == "__main__":
             "spp_rtklib_ionex",
         ],
         "extras/plot_nd.pdf",
+        frequency="2h",
     )
