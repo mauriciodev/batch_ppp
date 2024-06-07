@@ -53,7 +53,11 @@ if __name__ == "__main__":
             "data/spp_rtklib_ionex/onrj.parquet",
             "data/spp_rtklib_c1pg/onrj.parquet",
         ],
-        ["rtklib_brdc", "spp_rtklib_ionex", "spp_rtklib_c1pg"],
+        [
+            "rtklib_brdc",
+            "spp_rtklib_ionex",
+            "spp_rtklib_c1pg",
+        ],
         "extras/plot_igs.pdf",
         frequency="2h",
     )
