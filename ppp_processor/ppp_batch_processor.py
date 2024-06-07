@@ -166,8 +166,16 @@ class PPPBatchProcessor:
     def test_executable(self, ppp_executable):
         # Checking if the executable is available
         test_run = subprocess.run(ppp_executable, shell=True)
-        if test_run.returncode == 127:
-            print(f"Could not find a PPP executable in {ppp_executable}.")
+        if test_run.returncode > 0:
+            print(f"Docker error while running {ppp_executable}.")
+            print(
+                """
+                Perharps you forgot running the following steps:
+                  1 - docker build rtklib_docker -t rtklib:demo5
+                  2 - docker run -d -it -v ${PWD}/data:/data --name rtklib rtklib:demo5
+                  3 - docker start rtklib
+                """
+            )
             sys.exit(0)
         else:
             print(f"Using PPP executable: {ppp_executable}.")
@@ -180,6 +188,7 @@ class PPPBatchProcessor:
             run_ppp_method = self.run_rt_ppp  # this is a function
         elif self.config["ppp_solution"] == "rtklib":
             run_ppp_method = self.run_rtklib  # this is a function
+        ppp_executable_test = self.config["ppp_executable_test"]
         ppp_executable = self.config["ppp_executable"]
         template_conf = self.config["ppp_template_conf"]
         temporary_conf = os.path.join(run_folder, "temporary.inp")
@@ -199,7 +208,7 @@ class PPPBatchProcessor:
         experiment_folder = os.path.join(run_folder, experiment_name)
 
         # Checking if the executable is available
-        self.test_executable(ppp_executable)
+        self.test_executable(ppp_executable_test)
 
         error = []
 
@@ -270,7 +279,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c" "-config",
         type=argparse.FileType("r"),
-        default="configurations/experiment.yml",
+        default="configurations/spp_rtklib_brdc.yml",
     )
     parsed_args = parser.parse_args()
 

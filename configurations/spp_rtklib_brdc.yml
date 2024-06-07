@@ -7,8 +7,9 @@ ppp_solution: rtklib
 # ppp_executable can be set for linux, windows or docker
 # for linux: rnx2rtkp or rt_ppp
 # for windows: ./rnx2rtkp.exe or ./rt_ppp.exe
-# for docker: docker run -v ${PWD}/{run_folder}:/data rtklib
-ppp_executable: docker exec rtklib /rnx2rtkp 
+# for docker: docker exec rtklib /rnx2rtkp
+ppp_executable_test: docker exec rtklib /rnx2rtkp --help
+ppp_executable: docker exec rtklib /rnx2rtkp
 # Template file
 ppp_template_conf: templates/rtklib_template_brdc.conf
 # Start and End dates
