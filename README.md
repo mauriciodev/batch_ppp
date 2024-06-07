@@ -43,4 +43,6 @@ docker start rtklib
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_ionex.yml  
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_c1pg.yml  
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_brdc.yml  
+python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_unet.yml  
+python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_nd.yml  
 
