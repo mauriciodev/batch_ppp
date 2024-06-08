@@ -1,6 +1,7 @@
 import pandas as pd
 from scipy.spatial.distance import euclidean, cityblock, jaccard, cosine, correlation
 import argparse
+from sklearn.preprocessing import StandardScaler
 
 class SimilarityTool:
     def __init__(self, series1_path, series2_path) -> None:
@@ -9,6 +10,16 @@ class SimilarityTool:
 
         self.series1 = series1.loc[series1.index.intersection(series2.index)]
         self.series2 = series2.loc[series2.index.intersection(series1.index)]
+
+        #self.series1 = self.series1.apply(self.min_max_scaling)
+        #self.series2 = self.series2.apply(self.min_max_scaling)
+
+        print(self.series1.head())
+        print(self.series2.head())
+
+    def min_max_scaling(self, column):
+        """Function to scale to 0-1"""
+        return (column - column.min()) / (column.max() - column.min())
 
     def similarity(self, method):
         similarity_x = method(self.series1["X(m)"], self.series2["X(m)"])        
