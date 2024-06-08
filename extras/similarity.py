@@ -4,8 +4,11 @@ import argparse
 
 class SimilarityTool:
     def __init__(self, series1_path, series2_path) -> None:
-        self.series1 = pd.read_parquet(series1_path)
-        self.series2 = pd.read_parquet(series2_path)
+        series1 = pd.read_parquet(series1_path)
+        series2 = pd.read_parquet(series2_path)
+
+        self.series1 = series1.loc[series1.index.intersection(series2.index)]
+        self.series2 = series2.loc[series2.index.intersection(series1.index)]
 
     def similarity(self, method):
         similarity_x = method(self.series1["X(m)"], self.series2["X(m)"])        
