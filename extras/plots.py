@@ -58,7 +58,7 @@ if __name__ == "__main__":
             "spp_rtklib_c1pg",
             "spp_rtklib_ionex",
         ],
-        "extras/plot_igs.pdf",
+        "plots/plot_igs.pdf",
         frequency="2h",
     )
     plot(
@@ -72,7 +72,7 @@ if __name__ == "__main__":
             "spp_rtklib_c1pg",
             "spp_rtklib_ionex",
         ],
-        "extras/plot_unet.pdf",
+        "plots/plot_unet.pdf",
         frequency="2h",
     )
     plot(
@@ -86,7 +86,7 @@ if __name__ == "__main__":
             "spp_rtklib_c1pg",
             "spp_rtklib_ionex",
         ],
-        "extras/plot_simvp.pdf",
+        "plots/plot_simvp.pdf",
         frequency="2h",
     )
     plot(
@@ -100,6 +100,6 @@ if __name__ == "__main__":
             "spp_rtklib_c1pg",
             "spp_rtklib_ionex",
         ],
-        "extras/plot_nd.pdf",
+        "plots/plot_nd.pdf",
         frequency="2h",
     )
