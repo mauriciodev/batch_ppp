@@ -30,10 +30,18 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
             np.linalg.norm(series[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1),
             label=label,
             marker=".",
+            markersize=2,
+            linewidth=0.5,
         )
-        axs[1].plot(series["X(m)"], label=label, marker=".")
-        axs[2].plot(series["Y(m)"], label=label, marker=".")
-        axs[3].plot(series["Z(m)"], label=label, marker=".")
+        axs[1].plot(
+            series["X(m)"], label=label, marker=".", markersize=2, linewidth=0.5
+        )
+        axs[2].plot(
+            series["Y(m)"], label=label, marker=".", markersize=2, linewidth=0.5
+        )
+        axs[3].plot(
+            series["Z(m)"], label=label, marker=".", markersize=2, linewidth=0.5
+        )
 
     axs[0].set(ylabel="Norm deviation")
     axs[1].set(ylabel="X deviation")
@@ -75,7 +83,7 @@ def plot_experiments():
             "IONEX",
         ],
         fname="plots/plot_igs.pdf",
-        frequency="2h",
+        frequency="1D",
     )
 
     # Unet plot using IONEX as reference
@@ -91,7 +99,7 @@ def plot_experiments():
             "UNET to C1PG",
         ],
         fname="plots/plot_unet.pdf",
-        frequency="2h",
+        frequency="1D",
     )
 
     # Edconvlstm_nd plot using IONEX as reference
@@ -107,7 +115,21 @@ def plot_experiments():
             "ND to C1PG",
         ],
         fname="plots/plot_nd.pdf",
-        frequency="2h",
+        frequency="1D",
+    )
+
+    # Plotting UNET and ND together referenced against IONEX
+    plot(
+        [
+            nd_ionex,
+            unet_ionex,
+        ],
+        [
+            "ND to IONEX",
+            "UNET to IONEX",
+        ],
+        fname="plots/plot_nd_unet.pdf",
+        frequency="1D",
     )
 
 
