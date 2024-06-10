@@ -1,7 +1,6 @@
 import pandas as pd
 from scipy.spatial.distance import euclidean, cityblock, jaccard, cosine, correlation
 import argparse
-from sklearn.preprocessing import StandardScaler
 
 class SimilarityTool:
     def __init__(self, series1_path, series2_path) -> None:
@@ -43,6 +42,12 @@ if __name__ == '__main__':
 
     st = SimilarityTool(parsed_args.s1, parsed_args.s2)
 
-    methods = {'Euclidian':euclidean, 'Manhattan':cityblock, 'Jaccard':jaccard, 'Cosine':cosine, 'Correlation':correlation}
+    methods = {
+        "Euclidian": euclidean,
+        "Manhattan": cityblock,
+        "Jaccard": jaccard,
+        "Cosine": cosine,
+        "Correlation": correlation,
+    }
     for method in methods.items():
         print(f'{method[0]} similarity: {st.similarity(method[1])}')
