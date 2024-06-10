@@ -1,5 +1,4 @@
 import argparse
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -7,14 +6,13 @@ import os
 import yaml
 
 
-def intersect_series(series1_path, series2_path):
-    series1 = pd.read_parquet(series1_path)
-    series2 = pd.read_parquet(series2_path)
+def intersect_series(series_path, ref_path):
+    series = pd.read_parquet(series_path)
+    ref = pd.read_parquet(ref_path)
 
-    series1 = series1.loc[series1.index.intersection(series2.index)]
-    series2 = series2.loc[series2.index.intersection(series1.index)]
+    series = series.loc[series.index.intersection(ref.index)]
 
-    return series1, series2
+    return series
 
 
 def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
@@ -55,83 +53,58 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
     plt.close()
 
 
-def plot_experiments():
-    brdc_path = "data/rtklib_brdc/onrj.parquet"
-    c1pg_path = "data/spp_rtklib_c1pg/onrj.parquet"
-    ionex_path = "data/spp_rtklib_ionex/onrj.parquet"
-    unet_path = "data/unet/onrj.parquet"
-    simvp_path = "data/spp_rtklib_simvp/onrj.parquet"
-    nd_path = "data/edconvlstm_nd/onrj.parquet"
+def plot_experiments(cfg):
+    ref_name = cfg["files"]["ref"][0]
+    ref_path = cfg["files"]["ref"][1]
 
-    # Intersecting with ionex
-    brdc, ionex = intersect_series(brdc_path, ionex_path)
-    c1pg, ionex = intersect_series(c1pg_path, ionex_path)
-    unet, ionex = intersect_series(unet_path, ionex_path)
-    nd, ionex = intersect_series(nd_path, ionex_path)
-    # simvp, ionex = intersect_series(brdc_path, ionex_path)
+    igs_dict = {}
+    igs_dict[f"{ref_name}"] = pd.read_parquet(ref_path)
 
-    # First plot with base data: Broadcast, C1PG GIM prediction and IONEX GIM post processing
+    igs_data_list = cfg["files"]["igs"]
+    for igs_data in igs_data_list:
+        igs_name = igs_data[0]
+        igs_path = igs_data[1]
+
+        # Intersecting with ref and adding to the dictionary
+        igs_dict[f"{igs_name}"] = intersect_series(igs_path, ref_path)
+
+    series_data_list = cfg["files"]["series"]
+    series_dict = {}
+    for series_data in series_data_list:
+        series_name = series_data[0]
+        series_path = series_data[1]
+
+        # Intersecting with ref and adding to the dictionary
+        series_dict[f"{series_name}"] = (
+            intersect_series(series_path, ref_path) - igs_dict[f"{ref_name}"]
+        )
+
+    # First plot with base data: Broadcast, C1PG GIM prediction, IONEX GIM post processing and IONFREE (dual freq)
     plot(
-        [
-            brdc,
-            c1pg,
-            ionex,
-        ],
-        [
-            "BRDC",
-            "C1PG",
-            "IONEX",
-        ],
+        igs_dict.values(),
+        igs_dict.keys(),
         fname="plots/plot_igs.pdf",
         frequency="1D",
     )
 
-    # Unet plot using IONEX as reference
-    unet_ionex = unet - ionex
-    unet_c1pg = unet - c1pg
+    # Plot the networks against the reference
     plot(
-        [
-            unet_ionex,
-            unet_c1pg,
-        ],
-        [
-            "UNET to IONEX",
-            "UNET to C1PG",
-        ],
-        fname="plots/plot_unet.pdf",
-        frequency="1D",
-    )
-
-    # Edconvlstm_nd plot using IONEX as reference
-    nd_ionex = nd - ionex
-    nd_c1pg = nd - c1pg
-    plot(
-        [
-            nd_ionex,
-            nd_c1pg,
-        ],
-        [
-            "ND to IONEX",
-            "ND to C1PG",
-        ],
-        fname="plots/plot_nd.pdf",
-        frequency="1D",
-    )
-
-    # Plotting UNET and ND together referenced against IONEX
-    plot(
-        [
-            nd_ionex,
-            unet_ionex,
-        ],
-        [
-            "ND to IONEX",
-            "UNET to IONEX",
-        ],
-        fname="plots/plot_nd_unet.pdf",
+        series_dict.values(),
+        [f"{key} to {ref_name}" for key in series_dict.keys()],
+        fname="plots/plot_networks.pdf",
         frequency="1D",
     )
 
 
 if __name__ == "__main__":
-    plot_experiments()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-c",
+        "-config",
+        type=argparse.FileType("r"),
+        default="configurations/plots.yml",
+    )
+    parsed_args = parser.parse_args()
+
+    config = yaml.safe_load(parsed_args.c)
+    plot_experiments(config)
