@@ -84,7 +84,7 @@ def plot_experiments(cfg):
         igs_dict.values(),
         igs_dict.keys(),
         fname="plots/plot_igs.pdf",
-        frequency="1D",
+        frequency=cfg["resample"],
     )
 
     # Plot the networks against the reference
@@ -92,7 +92,7 @@ def plot_experiments(cfg):
         series_dict.values(),
         [f"{key} to {ref_name}" for key in series_dict.keys()],
         fname="plots/plot_networks.pdf",
-        frequency="1D",
+        frequency=cfg["resample"],
     )
 
 
