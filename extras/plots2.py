@@ -6,11 +6,11 @@ import os
 import yaml
 
 
-def intersect_series(series_path, ref_path):
+def intersect_series(series_path, ref_path=None):
     series = pd.read_parquet(series_path)
-    ref = pd.read_parquet(ref_path)
-
-    series = series.loc[series.index.intersection(ref.index)]
+    if not ref_path is None:
+        ref = pd.read_parquet(ref_path)
+        series = series.loc[series.index.intersection(ref.index)]
 
     return series
 
@@ -54,11 +54,15 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
 
 
 def plot_experiments(cfg):
-    ref_name = cfg["files"]["ref"][0]
-    ref_path = cfg["files"]["ref"][1]
-
     igs_dict = {}
-    igs_dict[f"{ref_name}"] = pd.read_parquet(ref_path)
+    if not cfg["files"]["ref"] is None:
+        ref_name = cfg["files"]["ref"][0]
+        ref_path = cfg["files"]["ref"][1]
+   
+        igs_dict[f"{ref_name}"] = pd.read_parquet(ref_path)
+    else:
+        ref_path = None
+        ref_name = ''
 
     igs_data_list = cfg["files"]["igs"]
     for igs_data in igs_data_list:
@@ -75,9 +79,14 @@ def plot_experiments(cfg):
         series_path = series_data[1]
 
         # Intersecting with ref and adding to the dictionary
-        series_dict[f"{series_name}"] = (
-            intersect_series(series_path, ref_path) - igs_dict[f"{ref_name}"]
-        )
+        if not cfg["files"]["ref"] is None:
+            series_dict[f"{series_name}"] = (
+                intersect_series(series_path, ref_path) - igs_dict[f"{ref_name}"]
+            )
+        else:
+            series_dict[f"{series_name}"] = (
+                intersect_series(series_path, ref_path)
+            )
 
     # First plot with base data: Broadcast, C1PG GIM prediction, IONEX GIM post processing and IONFREE (dual freq)
     plot(
