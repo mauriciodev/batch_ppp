@@ -10,6 +10,12 @@ class SimilarityTool:
         series = pd.read_parquet(series_path)
         ref = pd.read_parquet(ref_path)
 
+        # Adding the norm to the series and ref
+        series["Norm"] = np.linalg.norm(
+            series[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1
+        )
+        ref["Norm"] = np.linalg.norm(ref[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1)
+
         # Intersecting with the reference to align the timestamps
         series = series.loc[series.index.intersection(ref.index)]
 
