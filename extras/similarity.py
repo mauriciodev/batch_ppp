@@ -40,17 +40,25 @@ class SimilarityTool:
     def plot(self, concat_series):
         # MAE plot
         grouped = concat_series.groupby("metric")
+        
+        fig, axes = plt.subplots(nrows=1, ncols=4)
+        i=0
+        #plt.title("Metrics")  # Capitalize title
         for name, group in grouped:
-            plt.title(name)  # Capitalize title
-            group.plot.bar()
-            plt.xlabel("Network")
-            plt.ylabel("Metric")
-            plt.legend(title="Components")  # Add legend title
-            plt.grid(True)  # Add grid lines (optional)
-            plt.tight_layout()  # Adjust spacing (optional)
-            plt.savefig(f"plots/{name}.pdf")
-            plt.close()
-
+            group.plot.bar(ax=axes[i], x='network', legend=False)
+            #axes[i].set_xlabel("Network")
+            axes[i].set_title(name)
+            
+            axes[i].grid(True)  # Add grid lines (optional)
+            #if i == 0: 
+            #    axes[i].legend(loc=1) 
+            i+=1
+            
+        axes[-1].legend(title="Coordinates", loc = 'lower left')  # Add legend title~
+        #axes[2].legend(title="Coordinates",loc='upper center', bbox_to_anchor=(0.6, -0.05),fancybox=True, shadow=True,ncol=3)
+        plt.tight_layout()  # Adjust spacing (optional)
+        plt.savefig("plots/mae.pdf")
+        plt.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
