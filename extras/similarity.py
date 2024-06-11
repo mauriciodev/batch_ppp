@@ -3,80 +3,52 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class SimilarityTool:
 
     def __init__(self, series_path, ref_path, freq) -> None:
+        # Series and reference dataframes
         series = pd.read_parquet(series_path)
         ref = pd.read_parquet(ref_path)
 
-        # Intersectin with the reference to align the timestamps
+        # Intersecting with the reference to align the timestamps
         series = series.loc[series.index.intersection(ref.index)]
 
         # Computing the difference to the reference
-        series = series - ref
-
-        # Scaling in the range 0-1
-        series = series.apply(self.min_max_scaling)
+        diff_series = series - ref
 
         # Resampling according to the frequency
+        self.diff_series = diff_series.resample(freq).mean()
         self.series = series.resample(freq).mean()
-
-    def min_max_scaling(self, column):
-        """Function to scale to 0-1"""
-        return (column - column.min()) / (column.max() - column.min())
+        self.ref = ref.resample(freq).mean()
 
     def similarity(self):
-        mae = self.series.mean(axis=0).abs()
-        rmse = self.series.pow(2).mean(axis=0).pow(0.5)
-        stdev = self.series.std(axis=0)
+        mae = self.diff_series.mean(axis=0).abs()
+        rmse = self.diff_series.pow(2).mean(axis=0).pow(0.5)
+        stdev = self.diff_series.std(axis=0)
+        r2 = self.series.corrwith(self.ref, method="pearson")
 
         print(f"MAE: {mae}")
         print(f"RMSE: {rmse}")
         print(f"STDEV: {stdev}")
-        return mae, rmse, stdev
+        print(f"R2: {r2}")
+        return mae, rmse, stdev, r2
 
+    def calculate_correlation_all(self, x):
+        correlations = x.corr(self.ref, method="spearman")
+        return correlations.unstack(fill_value=np.nan)  # Reshape to DataFrame
 
-def plot(concat_series):
-    # MAE plot
-    concat_series_agg = concat_series.groupby("network").agg(
-        lambda x: abs(x.mean(axis=0))
-    )
-    plt.title("Mean Absolute Error")  # Capitalize title
-    concat_series_agg.plot.bar()
-    plt.xlabel("Network")
-    plt.ylabel("MAE")
-    plt.legend(title="Metrics")  # Add legend title
-    plt.grid(True)  # Add grid lines (optional)
-    plt.tight_layout()  # Adjust spacing (optional)
-    plt.savefig("plots/mae.pdf")
-    plt.close()
-
-    # RMSE plot
-    concat_series_agg = concat_series.groupby("network").agg(
-        lambda x: np.sqrt(np.power(x, 2).mean(axis=0))
-    )
-    plt.title("Root Mean Square Error")  # Capitalize title
-    concat_series_agg.plot.bar()
-    plt.xlabel("Network")
-    plt.ylabel("RMSE")
-    plt.legend(title="Metrics")  # Add legend title
-    plt.grid(True)  # Add grid lines (optional)
-    plt.tight_layout()  # Adjust spacing (optional)
-    plt.savefig("plots/rmse.pdf")
-    plt.close()
-
-    # STDEV plot
-    concat_series_agg = concat_series.groupby("network").agg("std")
-    plt.title("Standard Deviation")  # Capitalize title
-    concat_series_agg.plot.bar()
-    plt.xlabel("Network")
-    plt.ylabel("STDEV")
-    plt.legend(title="Metrics")  # Add legend title
-    plt.grid(True)  # Add grid lines (optional)
-    plt.tight_layout()  # Adjust spacing (optional)
-    plt.savefig("plots/stdev.pdf")
-    plt.close()
+    def plot(self, concat_series):
+        # MAE plot
+        group = concat_series.groupby("metric")
+        plt.title("Metrics")  # Capitalize title
+        group.plot.bar()
+        plt.xlabel("Network")
+        plt.ylabel("Metric")
+        plt.legend(title="Metrics")  # Add legend title
+        plt.grid(True)  # Add grid lines (optional)
+        plt.tight_layout()  # Adjust spacing (optional)
+        plt.savefig("plots/mae.pdf")
+        plt.close()
 
 
 if __name__ == '__main__':
@@ -96,7 +68,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "-r",
         "-ref",
-        default="data/spp_rtklib_ionex/onrj.parquet",
+        default="data/rtklib_ionfree/onrj.parquet",
     )
     parsed_args = parser.parse_args()
     series_path_list = parsed_args.s
@@ -104,11 +76,23 @@ if __name__ == '__main__':
     series_list = []
     for series_path, series_name in zip(series_path_list, series_names_list):
         st = SimilarityTool(series_path, parsed_args.r, freq="1D")
-        st.similarity()
-        series = st.series
+        mae, rmse, stdev, r2 = st.similarity()
+
+        mae["metric"] = "MAE"
+        rmse["metric"] = "RMSE"
+        stdev["metric"] = "STDEV"
+        r2["metric"] = "R2"
+
+        mae = mae.to_frame().T
+        rmse = rmse.to_frame().T
+        stdev = stdev.to_frame().T
+        r2 = r2.to_frame().T
+
+        series = pd.concat([mae, rmse, stdev, r2], axis=0)
         series["network"] = series_name
         series_list.append(series)
 
     concat_series = pd.concat(series_list, axis=0)
+    print(concat_series)
 
-    plot(concat_series=concat_series)
+    st.plot(concat_series=concat_series)
