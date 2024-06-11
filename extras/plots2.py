@@ -53,7 +53,7 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
     plt.close()
 
 
-def plot_experiments(cfg):
+def plot_experiments(cfg, yml_name):
     igs_dict = {}
     if not cfg["files"]["ref"] is None:
         ref_name = cfg["files"]["ref"][0]
@@ -97,10 +97,11 @@ def plot_experiments(cfg):
     )
 
     # Plot the networks against the reference
+    new_name = os.path.split(yml_name)[-1].replace('yml','pdf')
     plot(
         series_dict.values(),
         [f"{key} to {ref_name}" for key in series_dict.keys()],
-        fname="plots/plot_networks.pdf",
+        fname=f"plots/{new_name}",
         frequency=cfg["resample"],
     )
 
@@ -116,4 +117,4 @@ if __name__ == "__main__":
     parsed_args = parser.parse_args()
 
     config = yaml.safe_load(parsed_args.c)
-    plot_experiments(config)
+    plot_experiments(config, yml_name = parsed_args.c.name)
