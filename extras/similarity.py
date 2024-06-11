@@ -35,7 +35,7 @@ class SimilarityTool:
 
         return mae, rmse, stdev, r2
 
-    def plot(self, concat_series):
+    def plot(self, concat_series, save_plot):
         # MAE plot
         grouped = concat_series.groupby("metric")
 
@@ -55,8 +55,9 @@ class SimilarityTool:
         axes[-1].legend(title="Coordinates", loc = 'lower left')  # Add legend title~
         # axes[2].legend(title="Coordinates",loc='upper center', bbox_to_anchor=(0.6, -0.05),fancybox=True, shadow=True,ncol=3)
         plt.tight_layout()  # Adjust spacing (optional)
-        plt.savefig("plots/metrics.pdf")
+        plt.savefig(save_plot)
         plt.close()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -81,6 +82,11 @@ if __name__ == '__main__':
         "-o",
         "-output",
         default="plots/metrics.csv",
+    )
+    parser.add_argument(
+        "-p",
+        "-plot",
+        default="plots/metrics.pdf",
     )
     parsed_args = parser.parse_args()
     series_path_list = parsed_args.s
@@ -110,5 +116,5 @@ if __name__ == '__main__':
     concat_series = pd.concat(series_list, axis=0, ignore_index=True)
 
     # Plotting and saving the metrics as csv
-    st.plot(concat_series=concat_series)
+    st.plot(concat_series=concat_series, save_plot=parsed_args.p)
     concat_series.to_csv(parsed_args.o, index=False)
