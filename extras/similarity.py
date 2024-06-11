@@ -27,37 +27,29 @@ class SimilarityTool:
         stdev = self.diff_series.std(axis=0)
         r2 = self.series.corrwith(self.ref, method="pearson")
 
-        print(f"MAE: {mae}")
-        print(f"RMSE: {rmse}")
-        print(f"STDEV: {stdev}")
-        print(f"R2: {r2}")
         return mae, rmse, stdev, r2
-
-    def calculate_correlation_all(self, x):
-        correlations = x.corr(self.ref, method="spearman")
-        return correlations.unstack(fill_value=np.nan)  # Reshape to DataFrame
 
     def plot(self, concat_series):
         # MAE plot
         grouped = concat_series.groupby("metric")
-        
-        fig, axes = plt.subplots(nrows=1, ncols=4)
+
+        fig, axes = plt.subplots(nrows=1, ncols=len(grouped))
         i=0
-        #plt.title("Metrics")  # Capitalize title
+        # plt.title("Metrics")  # Capitalize title
         for name, group in grouped:
             group.plot.bar(ax=axes[i], x='network', legend=False)
-            #axes[i].set_xlabel("Network")
+            # axes[i].set_xlabel("Network")
             axes[i].set_title(name)
-            
+
             axes[i].grid(True)  # Add grid lines (optional)
-            #if i == 0: 
-            #    axes[i].legend(loc=1) 
+            # if i == 0:
+            #    axes[i].legend(loc=1)
             i+=1
-            
+
         axes[-1].legend(title="Coordinates", loc = 'lower left')  # Add legend title~
-        #axes[2].legend(title="Coordinates",loc='upper center', bbox_to_anchor=(0.6, -0.05),fancybox=True, shadow=True,ncol=3)
+        # axes[2].legend(title="Coordinates",loc='upper center', bbox_to_anchor=(0.6, -0.05),fancybox=True, shadow=True,ncol=3)
         plt.tight_layout()  # Adjust spacing (optional)
-        plt.savefig("plots/mae.pdf")
+        plt.savefig("plots/metrics.pdf")
         plt.close()
 
 if __name__ == '__main__':
@@ -79,6 +71,11 @@ if __name__ == '__main__':
         "-ref",
         default="data/rtklib_ionfree/onrj.parquet",
     )
+    parser.add_argument(
+        "-o",
+        "-output",
+        default="plots/metrics.csv",
+    )
     parsed_args = parser.parse_args()
     series_path_list = parsed_args.s
     series_names_list = parsed_args.n
@@ -92,16 +89,20 @@ if __name__ == '__main__':
         stdev["metric"] = "STDEV"
         r2["metric"] = "R2"
 
+        # As the metrics are Pandas Series, we need to convert them do dataframes and transpose them
         mae = mae.to_frame().T
         rmse = rmse.to_frame().T
         stdev = stdev.to_frame().T
         r2 = r2.to_frame().T
 
-        series = pd.concat([mae, rmse, stdev, r2], axis=0)
+        # Concatenating the metrics
+        series = pd.concat([mae, rmse, stdev, r2], axis=0, ignore_index=True)
         series["network"] = series_name
         series_list.append(series)
 
-    concat_series = pd.concat(series_list, axis=0)
-    print(concat_series)
+    # Making the final dataframe with all values
+    concat_series = pd.concat(series_list, axis=0, ignore_index=True)
 
+    # Plotting and saving the metrics as csv
     st.plot(concat_series=concat_series)
+    concat_series.to_csv(parsed_args.o, index=False)
