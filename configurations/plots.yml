@@ -1,10 +1,9 @@
 files:
-  ref: ['IONFREE', 'data/rtklib_ionfree/onrj.parquet']
+  ref: 
   igs:
     - ['BRDC', 'data/rtklib_brdc/onrj.parquet']
-    - ['C1PG', 'data/spp_rtklib_c1pg/onrj.parquet']
-    - ['IONEX', 'data/spp_rtklib_ionex/onrj.parquet']
   series:
-    - ['ND', 'data/edconvlstm_nd/onrj.parquet']
-    - ['UNET', 'data/unet/onrj.parquet']
+    - ['BRDC', 'data/rtklib_brdc/onrj.parquet']
+    - ['C1PG', 'data/spp_rtklib_c1pg/onrj.parquet']
+    - ['CODG', 'data/spp_rtklib_ionex/onrj.parquet']
 resample: '1D'

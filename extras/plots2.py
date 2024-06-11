@@ -24,7 +24,7 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
     for series, label in zip(series_list, label_list):
         series = series.resample(frequency).mean()
 
-        axs[0].plot(
+        axs[0].plot(series.index,
             np.linalg.norm(series[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1),
             label=label,
             marker=".",
@@ -98,9 +98,13 @@ def plot_experiments(cfg, yml_name):
 
     # Plot the networks against the reference
     new_name = os.path.split(yml_name)[-1].replace('yml','pdf')
+    if ref_name != '':
+        labels = [f"{key} to {ref_name}" for key in series_dict.keys()]
+    else:
+        labels = [f"{key}" for key in series_dict.keys()]
     plot(
         series_dict.values(),
-        [f"{key} to {ref_name}" for key in series_dict.keys()],
+        labels,
         fname=f"plots/{new_name}",
         frequency=cfg["resample"],
     )
