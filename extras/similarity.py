@@ -40,22 +40,26 @@ class SimilarityTool:
         grouped = concat_series.groupby("metric")
 
         fig, axes = plt.subplots(nrows=1, ncols=len(grouped))
-        i=0
-        # plt.title("Metrics")  # Capitalize title
+        i = 0
         for name, group in grouped:
-            group.plot.bar(ax=axes[i], x='network', legend=False)
-            # axes[i].set_xlabel("Network")
+            group.plot.bar(ax=axes[i], x="network", legend=False)
             axes[i].set_title(name)
 
             axes[i].grid(True)  # Add grid lines (optional)
-            # if i == 0:
-            #    axes[i].legend(loc=1)
+
             i+=1
 
-        axes[-1].legend(title="Coordinates", loc = 'lower left')  # Add legend title~
-        # axes[2].legend(title="Coordinates",loc='upper center', bbox_to_anchor=(0.6, -0.05),fancybox=True, shadow=True,ncol=3)
         plt.tight_layout()  # Adjust spacing (optional)
-        plt.savefig(save_plot)
+        handles, labels = axes[0].get_legend_handles_labels()
+        legend = fig.legend(
+            handles,
+            labels,
+            loc="lower center",
+            ncol=4,
+            title="Coordinates",
+            bbox_to_anchor=(0.5, -0.1),
+        )
+        plt.savefig(save_plot, bbox_inches="tight")
         plt.close()
 
 
