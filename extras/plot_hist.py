@@ -19,7 +19,7 @@ def my_app(cfg : DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
     series = cfg.get('series')
     bins = int(cfg.get('bins'))
-    makeHistComparison(series,'plots/plot_histogram.pdf', bins=bins)
+    makeHistComparison(series, cfg.get("plot"), bins=bins)
 
 def makeHistComparison(l,outfilename=f"compared_histogram_continuous.pdf",bins=100):
     plt.Figure((4,4))
