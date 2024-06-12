@@ -84,7 +84,7 @@ if __name__ == '__main__':
     for series_info in series_info_list:
         series_name = series_info[0]
         series_path = series_info[1]
-        st = SimilarityTool(series_path, config["ref"], freq="1D")
+        st = SimilarityTool(series_path, config["ref"], freq=config["resample"])
         mae, rmse, stdev, r2 = st.similarity()
 
         mae["metric"] = "MAE"
