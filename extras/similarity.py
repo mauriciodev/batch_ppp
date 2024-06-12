@@ -3,6 +3,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.metrics
+import yaml
 
 class SimilarityTool:
 
@@ -69,38 +70,21 @@ class SimilarityTool:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-s",
-        "-series",
-        nargs="*",
-        default=["data/unet/onrj.parquet", "data/edconvlstm_nd/onrj.parquet"],
-    )
-    parser.add_argument(
-        "-n",
-        "-names",
-        nargs="*",
-        default=["UNET", "ND"],
-    )
-    parser.add_argument(
-        "-r",
-        "-ref",
-        default="data/rtklib_ionfree/onrj.parquet",
-    )
-    parser.add_argument(
-        "-o",
-        "-output",
-        default="plots/metrics.csv",
-    )
-    parser.add_argument(
-        "-p",
-        "-plot",
-        default="plots/metrics.pdf",
+        "-c",
+        "-config",
+        type=argparse.FileType("r"),
+        default="configurations/similarity.yml",
     )
     parsed_args = parser.parse_args()
-    series_path_list = parsed_args.s
-    series_names_list = parsed_args.n
+
+    config = yaml.safe_load(parsed_args.c)
+
+    series_info_list = config["series"]
     series_list = []
-    for series_path, series_name in zip(series_path_list, series_names_list):
-        st = SimilarityTool(series_path, parsed_args.r, freq="1D")
+    for series_info in series_info_list:
+        series_name = series_info[0]
+        series_path = series_info[1]
+        st = SimilarityTool(series_path, config["ref"], freq="1D")
         mae, rmse, stdev, r2 = st.similarity()
 
         mae["metric"] = "MAE"
@@ -123,5 +107,5 @@ if __name__ == '__main__':
     concat_series = pd.concat(series_list, axis=0, ignore_index=True)
 
     # Plotting and saving the metrics as csv
-    st.plot(concat_series=concat_series, save_plot=parsed_args.p)
-    concat_series.to_csv(parsed_args.o, index=False)
+    st.plot(concat_series=concat_series, save_plot=config["plot"])
+    concat_series.to_csv(config["output"], index=False)

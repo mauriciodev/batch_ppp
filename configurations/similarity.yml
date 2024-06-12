@@ -1,0 +1,6 @@
+series:
+  - ['UNET', 'data/unet/onrj.parquet']
+  - ['EDCONVLSTM-ND', 'data/edconvlstm_nd/onrj.parquet']
+ref: 'data/spp_rtklib_ionex/onrj.parquet'
+output: 'plots/metrics.csv'
+plot: 'plots/metrics.pdf'
