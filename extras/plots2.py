@@ -41,10 +41,14 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
             series["Z(m)"], label=label, marker=".", markersize=2, linewidth=0.5
         )
 
-    axs[0].set(ylabel="Norm deviation")
-    axs[1].set(ylabel="X deviation")
-    axs[2].set(ylabel="Y deviation")
-    axs[3].set(ylabel="Z deviation")
+    #axs[0].set(ylabel="Norm deviation")
+    #axs[1].set(ylabel="N deviation")
+    #axs[2].set(ylabel="E deviation")
+    #axs[3].set(ylabel="U deviation")
+    axs[0].set(ylabel="DNorm")
+    axs[1].set(ylabel="DE")
+    axs[2].set(ylabel="DN")
+    axs[3].set(ylabel="DU")
     plt.legend(loc="lower center", ncol=len(series_list), bbox_to_anchor=(0.5, -1))
     plt.tight_layout()
 

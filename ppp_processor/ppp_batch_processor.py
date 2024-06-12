@@ -13,6 +13,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import yaml
+import pymap3d as pm
 
 
 class PPPBatchProcessor:
@@ -147,7 +148,10 @@ class PPPBatchProcessor:
 
         # pos = df_grouped.mean(['X(m)', 'Y(m)', 'Z(m)'])[['X(m)', 'Y(m)', 'Z(m)']].to_numpy() #.mean(axis=0)
         # pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].to_numpy().mean(axis=0) #.mean(axis=0)
-        return df[["datetime", "X(m)", "Y(m)", "Z(m)"]]
+        ellipsoid = pm.Ellipsoid.from_name('wgs84')
+        baseLLH = pm.ecef2geodetic(replaceDict["{x0}"], replaceDict["{y0}"], replaceDict["{z0}"], ellipsoid)
+        df["X(m)"], df["Y(m)"], df["Z(m)"] = pm.ecef2enu(df["X(m)"], df["Y(m)"], df["Z(m)"], baseLLH[0], baseLLH[1], baseLLH[2], ellipsoid)
+        return df[["datetime", "X(m)", "Y(m)", "Z(m)", 'sdx(m)', 'sdy(m)', 'sdz(m)']]
 
     def absError(self, m):
         return np.sqrt(np.sum(np.array(m) ** 2, axis=1))
@@ -267,9 +271,9 @@ class PPPBatchProcessor:
 
         # error = np.array(error)
         final_df = pd.concat(error).set_index("datetime")
-        final_df["X(m)"] -= reference_position[0]
-        final_df["Y(m)"] -= reference_position[1]
-        final_df["Z(m)"] -= reference_position[2]
+        #final_df["X(m)"] -= reference_position[0]
+        #final_df["Y(m)"] -= reference_position[1]
+        #final_df["Z(m)"] -= reference_position[2]
         final_df.to_parquet(save_array_as)
 
 

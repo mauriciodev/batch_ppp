@@ -18,7 +18,7 @@ end_date: 2015-12-31 # YYYY-MM-DD
 # Station to be processed
 station: onrj
 # Reference position which PPP will use to start processing and to compute errors against it.
-reference_position: [4283638.3610, -4026028.8230, -2466096.8370]
+reference_position: [4283638.36882, -4026028.90763, -2466096.66472]
 # Save results as numpy
 save_array_as: data/edconvlstm_nd/onrj.parquet
 # Optional ionex pattern. Used only for GIM-based ppp

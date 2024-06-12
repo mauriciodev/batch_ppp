@@ -46,3 +46,8 @@ python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_brdc.y
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_unet.yml  
 python3 ppp_processor/ppp_batch_processor.py -c configurations/spp_rtklib_nd.yml  
 
+# Plot
+python3 extras/plots2.py -c configurations/plots_nd.yml
+python3 extras/plots2.py -c configurations/plots_unet.yml
+python3 extras/similarity.py
+python3 extras/plot_hist.py

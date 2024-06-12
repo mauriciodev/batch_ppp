@@ -9,8 +9,8 @@ class SimilarityTool:
 
     def __init__(self, series_path, ref_path) -> None:
         # Series and reference dataframes
-        series = pd.read_parquet(series_path)
-        ref = pd.read_parquet(ref_path)
+        series = pd.read_parquet(series_path)[['X(m)','Y(m)','Z(m)']]
+        ref = pd.read_parquet(ref_path)[['X(m)','Y(m)','Z(m)']]
 
         # Adding the norm to the series and ref
         series["Norm"] = np.linalg.norm(
@@ -39,6 +39,8 @@ class SimilarityTool:
 
     def plot(self, concat_series, save_plot):
         # MAE plot
+        concat_series[['E(m)','N(m)','U(m)']] = concat_series[['X(m)','Y(m)','Z(m)']]
+        concat_series.drop(columns=['X(m)','Y(m)','Z(m)'], inplace=True)
         grouped = concat_series.groupby("metric")
 
         fig, axes = plt.subplots(nrows=1, ncols=len(grouped))

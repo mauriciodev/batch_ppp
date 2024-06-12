@@ -30,7 +30,7 @@ def makeHistComparison(l,outfilename=f"compared_histogram_continuous.pdf",bins=1
 
     for i,model in enumerate(l):
         df = pd.read_parquet(model[1])
-        m = np.linalg.norm(df.to_numpy(), axis=1).flatten()
+        m = np.linalg.norm(df[['X(m)','Y(m)','Z(m)']].to_numpy(), axis=1).flatten()
         if rmin==rmax:
             rmin = int(np.floor(np.percentile(m, 1)))
             rmax = int(np.floor(np.percentile(m, 99)))
@@ -44,9 +44,12 @@ def makeHistComparison(l,outfilename=f"compared_histogram_continuous.pdf",bins=1
             plt.step(edges, np.concatenate([[hist[0]],hist])*100 , label=model[0]) #*width np.concatenate([[hist[0]],hist])*100
             
         
-    plt.xlabel('Distance to the reference position.')
-    plt.ylabel('Percentage of positions estimated.')
-    plt.title(f'Histogram of the distance to the reference position')
+    #plt.xlabel('Distance to the reference position.')
+    #plt.ylabel('Percentage of positions estimated.')
+    #plt.title(f'Histogram of the distance to the reference position')
+    plt.xlabel('Distância para posição de referência.')
+    plt.ylabel('Percentual das posições obtidas.')
+    plt.title(f'Histograma das distâncias entre as posições obtidas e a referência.')    
     plt.legend()
     plt.savefig(outfilename,  bbox_inches='tight')
     plt.close()
