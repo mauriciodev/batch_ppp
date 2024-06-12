@@ -10,12 +10,6 @@ font = {'family' : 'Arial',
         'weight' : 'normal',
         'size'   : 12}
 
-#matplotlib.rc('font', **font)
-
-
-
-
-
 @hydra.main(
     version_base=None,
     config_path="../configurations",
