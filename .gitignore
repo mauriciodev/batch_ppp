@@ -165,6 +165,7 @@ cython_debug/
 # Ignore folders with 4 digit year number as name
 [0-9]{4}/
 
-# Ignore the data folder
+# Ignore the some folders
 data/
 plots/
+outputs/

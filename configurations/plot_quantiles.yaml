@@ -1,2 +1,3 @@
-folder: /home/mauricio/Desktop/Doutorado_psq/codigo/batch_ppp/data/{model}/onrj.parquet
+folder: data/{model}/onrj.parquet
 model: spp_rtklib_ionex
+plot: plots/percentiles.pdf
