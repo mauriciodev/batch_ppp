@@ -84,7 +84,7 @@ if __name__ == '__main__':
     for series_info in series_info_list:
         series_name = series_info[0]
         series_path = series_info[1]
-        st = SimilarityTool(series_path, config["ref"], freq="1D")
+        st = SimilarityTool(series_path, config["ref"], freq=config["resample"])
         mae, rmse, stdev, r2 = st.similarity()
 
         mae["metric"] = "MAE"
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         r2 = r2.to_frame().T
 
         # Concatenating the metrics
-        series = pd.concat([mae, rmse, r2], axis=0, ignore_index=True) #stdev, 
+        series = pd.concat([mae, rmse, stdev, r2], axis=0, ignore_index=True)  # stdev,
         series["network"] = series_name
         series_list.append(series)
 
