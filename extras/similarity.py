@@ -87,10 +87,10 @@ if __name__ == '__main__':
         st = SimilarityTool(series_path, config["ref"])
         mae, rmse, stdev, r2 = st.similarity()
 
-        mae["metric"] = "MAE"
-        rmse["metric"] = "RMSE"
-        stdev["metric"] = "STDEV"
-        r2["metric"] = "R2"
+        mae["metric"] = "MAE (lower is better)"
+        rmse["metric"] = "RMSE (lower is better)"
+        stdev["metric"] = "STDEV (lower is better)"
+        r2["metric"] = "R2 (higher is better)"
 
         # As the metrics are Pandas Series, we need to convert them do dataframes and transpose them
         mae = mae.to_frame().T
