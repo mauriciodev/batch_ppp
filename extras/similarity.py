@@ -2,6 +2,7 @@ import pandas as pd
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+import sklearn.metrics
 
 class SimilarityTool:
 
@@ -28,10 +29,10 @@ class SimilarityTool:
         self.ref = ref.resample(freq).mean()
 
     def similarity(self):
-        mae = self.diff_series.mean(axis=0).abs()
-        rmse = self.diff_series.pow(2).mean(axis=0).pow(0.5)
+        mae = self.series.corrwith(self.ref, method=sklearn.metrics.mean_absolute_error)
+        rmse = self.series.corrwith(self.ref, method=sklearn.metrics.root_mean_squared_error)
         stdev = self.diff_series.std(axis=0)
-        r2 = self.series.corrwith(self.ref, method="pearson")
+        r2 = self.series.corrwith(self.ref, method=sklearn.metrics.r2_score)#"pearson")
 
         return mae, rmse, stdev, r2
 
@@ -41,9 +42,11 @@ class SimilarityTool:
 
         fig, axes = plt.subplots(nrows=1, ncols=len(grouped))
         i = 0
+        axes[0].set_ylabel('Difference (m)')
         for name, group in grouped:
             group.plot.bar(ax=axes[i], x="network", legend=False)
             axes[i].set_title(name)
+            axes[i].set_xlabel(None)
 
             axes[i].grid(True)  # Add grid lines (optional)
 
@@ -112,7 +115,7 @@ if __name__ == '__main__':
         r2 = r2.to_frame().T
 
         # Concatenating the metrics
-        series = pd.concat([mae, rmse, stdev, r2], axis=0, ignore_index=True)
+        series = pd.concat([mae, rmse, r2], axis=0, ignore_index=True) #stdev, 
         series["network"] = series_name
         series_list.append(series)
 
