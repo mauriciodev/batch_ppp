@@ -7,7 +7,7 @@ import yaml
 
 class SimilarityTool:
 
-    def __init__(self, series_path, ref_path, freq) -> None:
+    def __init__(self, series_path, ref_path) -> None:
         # Series and reference dataframes
         series = pd.read_parquet(series_path)
         ref = pd.read_parquet(ref_path)
@@ -25,9 +25,9 @@ class SimilarityTool:
         diff_series = series - ref
 
         # Resampling according to the frequency
-        self.diff_series = diff_series.resample(freq).mean()
-        self.series = series.resample(freq).mean()
-        self.ref = ref.resample(freq).mean()
+        self.diff_series = diff_series
+        self.series = series
+        self.ref = ref
 
     def similarity(self):
         mae = self.series.corrwith(self.ref, method=sklearn.metrics.mean_absolute_error)
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     for series_info in series_info_list:
         series_name = series_info[0]
         series_path = series_info[1]
-        st = SimilarityTool(series_path, config["ref"], freq=config["resample"])
+        st = SimilarityTool(series_path, config["ref"])
         mae, rmse, stdev, r2 = st.similarity()
 
         mae["metric"] = "MAE"
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         r2 = r2.to_frame().T
 
         # Concatenating the metrics
-        series = pd.concat([mae, rmse, stdev, r2], axis=0, ignore_index=True)  # stdev,
+        series = pd.concat([mae, rmse, r2], axis=0, ignore_index=True)  # stdev,
         series["network"] = series_name
         series_list.append(series)
 
