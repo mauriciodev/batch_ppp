@@ -99,7 +99,7 @@ if __name__ == '__main__':
         r2 = r2.to_frame().T
 
         # Concatenating the metrics
-        series = pd.concat([mae, rmse, r2], axis=0, ignore_index=True) #stdev, 
+        series = pd.concat([mae, rmse, stdev, r2], axis=0, ignore_index=True)  # stdev,
         series["network"] = series_name
         series_list.append(series)
 
