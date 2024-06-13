@@ -210,7 +210,7 @@ class PPPBatchProcessor:
         reference_position = self.config["process"].get("reference_position")
         save_array_as = self.config["process"].get("save_array_as")
         ionex_pattern = self.config["process"].get("ionex_pattern")
-        ionex_folder = self.config["process"].get("ionex_pattern")
+        ionex_folder = self.config["process"].get("ionex_folder")
 
         # Getting dates
         d0, d1 = self.get_dates()
