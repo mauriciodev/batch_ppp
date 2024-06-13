@@ -101,7 +101,7 @@ def plot_experiments(cfg, yml_name):
     )
 
     # Plot the networks against the reference
-    new_name = os.path.split(yml_name)[-1].replace('yml','pdf')
+    new_name = os.path.split(yml_name)[-1].replace('yaml','pdf')
     if ref_name != '':
         labels = [f"{key} to {ref_name}" for key in series_dict.keys()]
     else:
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         "-c",
         "-config",
         type=argparse.FileType("r"),
-        default="configurations/plots.yml",
+        default="configurations/plot/plots.yaml",
     )
     parsed_args = parser.parse_args()
 

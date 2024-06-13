@@ -40,10 +40,10 @@ templates/rtklib_template_brdc.conf
 
 # Run
 docker start rtklib
-python ppp_processor/ppp_batch_processor.py --multirun process=spp_rtklib_brdc,spp_rtklib_c1pg,spp_rtklib_ionex,spp_rtklib_ionfree,spp_rtklib_nd,spp_rtklib_unet
+python ppp_processor/ppp_batch_processor.py --multirun process=spp_rtklib_brdc,spp_rtklib_c1pg,spp_rtklib_ionex,spp_rtklib_nd,spp_rtklib_unet
 
 # Plot
-python3 extras/plots2.py -c configurations/plots_nd.yml
-python3 extras/plots2.py -c configurations/plots_unet.yml
-python3 extras/similarity.py
+python3 extras/plots2.py -c configurations/plot/plots_nd.yaml
+python3 extras/plots2.py -c configurations/plot/plots_unet.yaml
+python3 extras/similarity.py  -c configurations/similarity.yaml
 python3 extras/plot_hist.py

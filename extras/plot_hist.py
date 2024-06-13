@@ -12,7 +12,7 @@ font = {'family' : 'Arial',
 
 @hydra.main(
     version_base=None,
-    config_path="../configurations",
+    config_path="../configurations/plot",
     config_name="plots_hist",
 )
 def my_app(cfg : DictConfig) -> None:

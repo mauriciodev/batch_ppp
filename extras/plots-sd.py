@@ -21,9 +21,19 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
     for ax in axs:
         # ax.grid(True, which='both')
         ax.axhline(y=0, color="k")
+        
+    axis_already_limitted = False
     for series, label in zip(series_list, label_list):
         series = series.resample(frequency).mean()
-
+        
+        if not axis_already_limitted:
+            axs[0].set_ylim(bottom=2.5, top =4.8)
+            axs[1].set_ylim(bottom=2.5, top =4.8)
+            axs[2].set_ylim(bottom=2.5, top =4.8)
+            #axs[1].set_ylim(bottom=series['sdy(m)'].min())
+            #axs[2].set_ylim(bottom=series['sdz(m)'].min())
+            axis_already_limitted = True
+        
         axs[0].plot(
             series['sdx(m)'], label=label, marker=".", markersize=2, linewidth=0.5
         )

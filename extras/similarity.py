@@ -75,7 +75,7 @@ if __name__ == '__main__':
         "-c",
         "-config",
         type=argparse.FileType("r"),
-        default="configurations/similarity.yml",
+        default="configurations/similarity.yaml",
     )
     parsed_args = parser.parse_args()
 
