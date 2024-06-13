@@ -1,0 +1,7 @@
+files:
+  series:
+    - ['CODG', 'data/spp_rtklib_ionex/onrj.parquet']
+    - ['C1PG', 'data/spp_rtklib_c1pg/onrj.parquet']
+    - ['ND', 'data/edconvlstm_nd/onrj.parquet']
+    - ['UNET 3D 7x3x3', 'data/unet/onrj.parquet']
+resample: '1D'
