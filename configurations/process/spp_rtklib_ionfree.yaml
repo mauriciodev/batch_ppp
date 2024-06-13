@@ -1,5 +1,5 @@
 # Experiment configurations
-experiment_name: spp_rtklib_ionex
+experiment_name: rtklib_ionfree
 # Running folder
 run_folder: data
 # ppp_solution can be either 'rt_ppp' or 'rtklib'
@@ -11,17 +11,19 @@ ppp_solution: rtklib
 ppp_executable_test: docker exec rtklib /rnx2rtkp --help
 ppp_executable: docker exec rtklib /rnx2rtkp
 # Template file
-ppp_template_conf: templates/rtklib_template_ionex.conf
+ppp_template_conf: templates/rtklib_template_ionfree.conf
 # Start and End dates
 start_date: 2015-01-04 # YYYY-MM-DD
 end_date: 2015-12-31 # YYYY-MM-DD
 # Station to be processed
 station: onrj
 # Reference position which PPP will use to start processing and to compute errors against it.
-reference_position: [4283638.36882, -4026028.90763, -2466096.66472]
+reference_position: [4283638.3610, -4026028.8230, -2466096.8370]
 # Save results as numpy
-save_array_as: data/spp_rtklib_ionex/onrj.parquet
+save_array_as: data/rtklib_ionfree/onrj.parquet
 # Optional ionex pattern. Used only for GIM-based ppp
-ionex_pattern: codg{doy:03}0.{y2d:02}i
+ionex_pattern: codg{doy:03}0.{y2d}i #y2d = year with 2 digits
 # Ionex folder
 ionex_folder: data/ionex
+# Recalculate positions
+update_pos: False

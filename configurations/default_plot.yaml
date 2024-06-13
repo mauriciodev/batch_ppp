@@ -1,0 +1,3 @@
+defaults:
+  - plot: spp_rtklib_brdc
+  - _self_

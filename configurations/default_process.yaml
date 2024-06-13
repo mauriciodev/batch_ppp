@@ -1,0 +1,3 @@
+defaults:
+  - process: spp_rtklib_brdc
+  - _self_

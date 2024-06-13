@@ -8,18 +8,29 @@ from pathlib import Path
 import argparse
 import stat
 import re
-
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import yaml
 import pymap3d as pm
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
+
+@hydra.main(
+    version_base=None, config_path="../configurations", config_name="default_process"
+)
+def main(cfg: DictConfig):
+    OmegaConf.to_yaml(cfg)
+    ppp_processor = PPPBatchProcessor(config=cfg)
+    ppp_processor.main()
 
 
 class PPPBatchProcessor:
-    def __init__(self, config, update_pos=False) -> None:
+
+    def __init__(self, config) -> None:
         self.config = config
-        self.update_pos = update_pos
+        self.update_pos = config["process"].get("update_pos")
 
     # This method is not really used, but it can be used to clean GNSS data.
     def rinex_with_gps_only(self, rinexFile: str):
@@ -157,8 +168,8 @@ class PPPBatchProcessor:
         return np.sqrt(np.sum(np.array(m) ** 2, axis=1))
 
     def get_dates(self) -> tuple[pd.Timestamp, pd.Timestamp]:
-        start_date = self.config["start_date"]
-        end_date = self.config["end_date"]
+        start_date = self.config["process"].get("start_date")
+        end_date = self.config["process"].get("end_date")
 
         # Defining dates for Jan, 1st and Dec, 31st
         d0 = pd.to_datetime(start_date)  # date(year=start_year, month=1, day=1)
@@ -185,21 +196,22 @@ class PPPBatchProcessor:
 
     def main(self):
         # Getting configs from the yaml file
-        experiment_name = self.config["experiment_name"]
-        run_folder = self.config["run_folder"]
-        if self.config["ppp_solution"] == "rt_ppp":
+        experiment_name = self.config["process"].get("experiment_name")
+        run_folder = self.config["process"].get("run_folder")
+        print(run_folder)
+        if self.config["process"].get("ppp_solution") == "rt_ppp":
             run_ppp_method = self.run_rt_ppp  # this is a function
-        elif self.config["ppp_solution"] == "rtklib":
+        elif self.config["process"].get("ppp_solution") == "rtklib":
             run_ppp_method = self.run_rtklib  # this is a function
-        ppp_executable_test = self.config["ppp_executable_test"]
-        ppp_executable = self.config["ppp_executable"]
-        template_conf = self.config["ppp_template_conf"]
+        ppp_executable_test = self.config["process"].get("ppp_executable_test")
+        ppp_executable = self.config["process"].get("ppp_executable")
+        template_conf = self.config["process"].get("ppp_template_conf")
         temporary_conf = os.path.join(run_folder, "temporary.inp")
-        station = self.config["station"]
-        reference_position = self.config["reference_position"]
-        save_array_as = self.config["save_array_as"]
-        ionex_pattern = self.config["ionex_pattern"]
-        ionex_folder = self.config["ionex_pattern"]
+        station = self.config["process"].get("station")
+        reference_position = self.config["process"].get("reference_position")
+        save_array_as = self.config["process"].get("save_array_as")
+        ionex_pattern = self.config["process"].get("ionex_pattern")
+        ionex_folder = self.config["process"].get("ionex_pattern")
 
         # Getting dates
         d0, d1 = self.get_dates()
@@ -247,8 +259,8 @@ class PPPBatchProcessor:
             navFile = os.path.join(year_folder, fname.replace(".zip", f".{y2d}n"))
             navFile2 = os.path.join(year_folder, fname.replace(".zip", f".{y2d}g"))
             ionex = os.path.join(
-                config["ionex_folder"],
-                config["ionex_pattern"].format(doy=day.day_of_year, y2d=day.year % 100),
+                ionex_folder,
+                ionex_pattern.format(doy=day.day_of_year, y2d=day.year % 100),
             )  # f"ionex/codg{day.day_of_year:03}0.{day.year%100}i"
             replaceDict = {
                 "{ionex}": ionex,
@@ -271,22 +283,23 @@ class PPPBatchProcessor:
 
         # error = np.array(error)
         final_df = pd.concat(error).set_index("datetime")
-        #final_df["X(m)"] -= reference_position[0]
-        #final_df["Y(m)"] -= reference_position[1]
-        #final_df["Z(m)"] -= reference_position[2]
+        # final_df["X(m)"] -= reference_position[0]
+        # final_df["Y(m)"] -= reference_position[1]
+        # final_df["Z(m)"] -= reference_position[2]
         final_df.to_parquet(save_array_as)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-c" "-config",
-        type=argparse.FileType("r"),
-        default="configurations/spp_rtklib_brdc.yml",
-    )
-    parsed_args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "-c" "-config",
+    #     type=argparse.FileType("r"),
+    #     default="configurations/spp_rtklib_brdc.yml",
+    # )
+    # parsed_args = parser.parse_args()
 
-    config = yaml.safe_load(parsed_args.c_config)
+    # config = yaml.safe_load(parsed_args.c_config)
 
-    ppp_processor = PPPBatchProcessor(config, update_pos=False)
-    ppp_processor.main()
+    # ppp_processor = PPPBatchProcessor(config, update_pos=False)
+    # ppp_processor.main()
+    main()
