@@ -16,7 +16,6 @@ import pymap3d as pm
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
-
 @hydra.main(
     version_base=None, config_path="../configurations", config_name="default_process"
 )
@@ -43,9 +42,8 @@ class PPPBatchProcessor:
             f = Path("Binary/teqc")
             f.chmod(
                 f.stat().st_mode | stat.S_IEXEC
-            )  # change permission to run the file]
+            )  # change permission to run the file
         newFile = rinexFile.replace(".", "-new.")
-        # ./teqc -E -C -R -S -O.obs L1L2C1P2S1S2 +out $newFile $rnx2file
         subprocess.run(
             f"Binary/teqc -E -C -R -S -O.obs L1L2C1P2S1S2 +out {newFile} {rinexFile}",
             shell=True,
@@ -78,11 +76,9 @@ class PPPBatchProcessor:
     ):
         out_file = obsFile.split(".")[0] + ".pos"  #'temp.obs'
         move_file = os.path.join(move_to, os.path.split(out_file)[-1])
-        # rtkcmd=f'./rnx2rtkp -x 2 -y 0 -k temporary.conf -o {outFile} {obsFile} {navFile} {navFile2}'
         if not os.path.exists(outFile) or (self.update_pos == True):
             self.temporaryConf(replaceDict, temporary_conf, template_conf)
             cmd = f"{ppp_executable} {obsFile} {temporary_conf}"
-            # obsFile = rinex_with_gps_only(obsFile) #cleaning to leave only GPS data
             print(f"Running {cmd}")
             result = subprocess.run(
                 cmd,
@@ -99,7 +95,7 @@ class PPPBatchProcessor:
         df = pd.read_csv(
             outFile, comment="%", sep="\s+", parse_dates=True, header="infer"
         )
-        pos = df[["X(m)", "Y(m)", "Z(m)"]].to_numpy().mean(axis=0)  # .mean(axis=0)
+        pos = df[["X(m)", "Y(m)", "Z(m)"]].to_numpy().mean(axis=0)
         return pos
 
     def run_rtklib(
@@ -128,8 +124,7 @@ class PPPBatchProcessor:
                 cwd=cwd,
             )
         if not os.path.exists(move_file):
-            # return np.array([np.nan, np.nan, np.nan])
-            return None  # np.repeat([[np.nan, np.nan, np.nan]], axis=0, repeats=groups_per_file)
+            return None
 
         header = [
             "date",
@@ -148,21 +143,25 @@ class PPPBatchProcessor:
             "age(s)",
             "ratio",
         ]
-        df = pd.read_csv(
-            move_file, comment="%", sep="\s+", names=header
-        )  # header='infer') parse_dates=['date'],
+        df = pd.read_csv(move_file, comment="%", sep="\s+", names=header)
         df["datetime"] = pd.to_datetime(
             df["date"].astype(str) + " " + df["GPST"].astype(str),
             format="%Y/%m/%d %H:%M:%S.%f",
         )
-        # df_grouped = df.groupby([pd.Grouper(key='GPST', freq='2H')])
-
-        # pos = df_grouped.mean(['X(m)', 'Y(m)', 'Z(m)'])[['X(m)', 'Y(m)', 'Z(m)']].to_numpy() #.mean(axis=0)
-        # pos = df[['x-ecef(m)', 'y-ecef(m)', 'z-ecef(m)']].to_numpy().mean(axis=0) #.mean(axis=0)
-        ellipsoid = pm.Ellipsoid.from_name('wgs84')
-        baseLLH = pm.ecef2geodetic(replaceDict["{x0}"], replaceDict["{y0}"], replaceDict["{z0}"], ellipsoid)
-        df["X(m)"], df["Y(m)"], df["Z(m)"] = pm.ecef2enu(df["X(m)"], df["Y(m)"], df["Z(m)"], baseLLH[0], baseLLH[1], baseLLH[2], ellipsoid)
-        return df[["datetime", "X(m)", "Y(m)", "Z(m)", 'sdx(m)', 'sdy(m)', 'sdz(m)']]
+        ellipsoid = pm.Ellipsoid.from_name("wgs84")
+        baseLLH = pm.ecef2geodetic(
+            replaceDict["{x0}"], replaceDict["{y0}"], replaceDict["{z0}"], ellipsoid
+        )
+        df["X(m)"], df["Y(m)"], df["Z(m)"] = pm.ecef2enu(
+            df["X(m)"],
+            df["Y(m)"],
+            df["Z(m)"],
+            baseLLH[0],
+            baseLLH[1],
+            baseLLH[2],
+            ellipsoid,
+        )
+        return df[["datetime", "X(m)", "Y(m)", "Z(m)", "sdx(m)", "sdy(m)", "sdz(m)"]]
 
     def absError(self, m):
         return np.sqrt(np.sum(np.array(m) ** 2, axis=1))
@@ -172,8 +171,8 @@ class PPPBatchProcessor:
         end_date = self.config["process"].get("end_date")
 
         # Defining dates for Jan, 1st and Dec, 31st
-        d0 = pd.to_datetime(start_date)  # date(year=start_year, month=1, day=1)
-        d1 = pd.to_datetime(end_date)  # date(year=end_year, month=12, day=31)
+        d0 = pd.to_datetime(start_date)
+        d1 = pd.to_datetime(end_date)
 
         return d0, d1
 
@@ -232,14 +231,12 @@ class PPPBatchProcessor:
 
         for day in tqdm(pd.date_range(d0, d1, freq="D")):
             os.makedirs(output_folder, exist_ok=True)
-            # day=pd.to_datetime(d0)+pd.Timedelta('117D')
             year = str(day.year)
             year_folder = os.path.join(station_folder, year)
             fname = f"{station}{day.day_of_year:03}1.zip"
 
             # Checking if the file exists
             if not os.path.exists(os.path.join(year_folder, fname)):
-                # error.append([np.nan,np.nan,np.nan])
                 print(day, day.day_of_year)
                 continue
 
@@ -249,7 +246,6 @@ class PPPBatchProcessor:
                 shutil.unpack_archive(archive_path, year_folder)
             except Exception as e:
                 print(f"Error unpacking archive {archive_path}: {e}")
-                # error.append([np.nan,np.nan,np.nan])
                 print(day, day.day_of_year)
                 continue
 
@@ -261,7 +257,7 @@ class PPPBatchProcessor:
             ionex = os.path.join(
                 ionex_folder,
                 ionex_pattern.format(doy=day.day_of_year, y2d=day.year % 100),
-            )  # f"ionex/codg{day.day_of_year:03}0.{day.year%100}i"
+            )
             replaceDict = {
                 "{ionex}": ionex,
                 "{x0}": reference_position[0],
@@ -279,27 +275,10 @@ class PPPBatchProcessor:
                 move_to=output_folder,
             )
             if not position is None:
-                error.append(position)  # - reference_position
+                error.append(position)
 
-        # error = np.array(error)
         final_df = pd.concat(error).set_index("datetime")
-        # final_df["X(m)"] -= reference_position[0]
-        # final_df["Y(m)"] -= reference_position[1]
-        # final_df["Z(m)"] -= reference_position[2]
         final_df.to_parquet(save_array_as)
 
-
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument(
-    #     "-c" "-config",
-    #     type=argparse.FileType("r"),
-    #     default="configurations/spp_rtklib_brdc.yml",
-    # )
-    # parsed_args = parser.parse_args()
-
-    # config = yaml.safe_load(parsed_args.c_config)
-
-    # ppp_processor = PPPBatchProcessor(config, update_pos=False)
-    # ppp_processor.main()
     main()
