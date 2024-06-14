@@ -38,18 +38,19 @@ def makeHistComparison(l,outfilename=f"compared_histogram_continuous.pdf",bins=1
         hist, edges = np.histogram(m.reshape(-1), bins=bins,range=[rmin, rmax], density=True)  
         width = edges[1]-edges[0]
         #plt.plot(edges[:-1]+0.5*width,hist*100, label=model[1]) #, marker='.'
+        label = f"{model[0]} $\mu={m.mean():.2f}m$, $\sigma={m.std():.2f}m$"
         if i==0:
-            plt.bar(edges[:-1]+0.5*width, hist*100, label=model[0], alpha=0.5, width=width) #
+            plt.bar(edges[:-1]+0.5*width, hist*100, label=label, alpha=0.5, width=width) #
         else: 
-            plt.step(edges, np.concatenate([[hist[0]],hist])*100 , label=model[0]) #*width np.concatenate([[hist[0]],hist])*100
+            plt.step(edges, np.concatenate([[hist[0]],hist])*100 , label=label) #*width np.concatenate([[hist[0]],hist])*100
             
         
     #plt.xlabel('Distance to the reference position.')
     #plt.ylabel('Percentage of positions estimated.')
     #plt.title(f'Histogram of the distance to the reference position')
-    plt.xlabel('Distância para posição de referência.')
+    plt.xlabel('Norma do vetor de incertezas da posição (sdx, sdy, sdz) (em metros).')
     plt.ylabel('Percentual das posições obtidas.')
-    plt.title(f'Histograma das distâncias entre as posições obtidas e a referência.')    
+    plt.title(f'Histograma da norma do vetor de incertezas da posição (sdx, sdy, sdz).')    
     plt.legend()
     plt.savefig(outfilename,  bbox_inches='tight')
     plt.close()
