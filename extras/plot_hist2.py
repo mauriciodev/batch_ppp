@@ -50,7 +50,7 @@ def makeHistComparison(l,outfilename=f"compared_histogram_continuous.pdf",bins=1
     #plt.title(f'Histogram of the distance to the reference position')
     plt.xlabel('Norma do vetor de incertezas da posição (sdx, sdy, sdz) (em metros).')
     plt.ylabel('Percentual das posições obtidas.')
-    plt.title(f'Histograma da norma do vetor de incertezas da posição (sdx, sdy, sdz).')    
+    plt.title(f'Histogramas das normas dos vetores de incertezas da posição (sdx, sdy, sdz).')    
     plt.legend()
     plt.savefig(outfilename,  bbox_inches='tight')
     plt.close()

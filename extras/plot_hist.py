@@ -50,7 +50,7 @@ def makeHistComparison(l,outfilename=f"compared_histogram_continuous.pdf",bins=1
     #plt.title(f'Histogram of the distance to the reference position')
     plt.xlabel('Distância para posição de referência (em metros).')
     plt.ylabel('Percentual das posições obtidas.')
-    plt.title(f'Histograma das distâncias entre as posições obtidas e a referência.')    
+    plt.title(f'Histogramas das distâncias entre as posições obtidas e a referência.')    
     plt.legend()
     plt.savefig(outfilename,  bbox_inches='tight')
     plt.close()
