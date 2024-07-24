@@ -3,6 +3,6 @@ series:
 - ['BRDC', 'data/rtklib_brdc/onrj.parquet']
 - ['C1PG', 'data/spp_rtklib_c1pg/onrj.parquet']
 - ['ED-ConvLSTM-ND', 'data/edconvlstm_nd/onrj.parquet']
-- ['UNET 3D 7x3x3', 'data/unet/onrj.parquet']
+- ['UNET 3D 7x1x1', 'data/unet/onrj.parquet']
 bins: 20
 plot: plots/plot_histogram2.pdf
