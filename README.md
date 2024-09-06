@@ -30,7 +30,7 @@ cd ../../../../..
 cp RTKLIB/app/consapp/rnx2rtkp/gcc/rnx2rtkp ./
 
 ### Checking the installation
-./rnx2rtkp --help
+./rnx2rtkp --help  
 
 # Configuration YAML file
 config.yml  
@@ -39,11 +39,11 @@ config.yml
 templates/rtklib_template_brdc.conf  
 
 # Run
-docker start rtklib
+docker start rtklib  
 python ppp_processor/ppp_batch_processor.py --multirun process=spp_rtklib_brdc,spp_rtklib_c1pg,spp_rtklib_ionex,spp_rtklib_nd,spp_rtklib_unet
 
 # Plot
-python3 extras/plots2.py -c configurations/plot/plots_nd.yaml
-python3 extras/plots2.py -c configurations/plot/plots_unet.yaml
-python3 extras/similarity.py  -c configurations/similarity.yaml
+python3 extras/plots2.py -c configurations/plot/plots_nd.yaml  
+python3 extras/plots2.py -c configurations/plot/plots_unet.yaml  
+python3 extras/similarity.py  -c configurations/similarity.yaml  
 python3 extras/plot_hist.py
