@@ -13,10 +13,10 @@ class SimilarityTool:
         ref = pd.read_parquet(ref_path)[['X(m)','Y(m)','Z(m)']]
 
         # Adding the norm to the series and ref
-        series["Norm"] = np.linalg.norm(
-            series[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1
-        )
-        ref["Norm"] = np.linalg.norm(ref[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1)
+        #series["Norm1"] = np.linalg.norm(
+        #    series[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1
+        #)
+        #ref["Norm1"] = np.linalg.norm(ref[["X(m)", "Y(m)", "Z(m)"]].to_numpy(), axis=-1)
 
         # Intersecting with the reference to align the timestamps
         series = series.loc[series.index.intersection(ref.index)]
@@ -40,17 +40,20 @@ class SimilarityTool:
     def plot(self, concat_series, save_plot):
         # MAE plot
         concat_series[['E(m)','N(m)','U(m)']] = concat_series[['X(m)','Y(m)','Z(m)']]
+        #concat_series['Norm'] = np.linalg.norm(
+        #    concat_series[["E(m)", "N(m)", "U(m)"]].to_numpy(dtype=float), axis=-1
+        #)
         concat_series.drop(columns=['X(m)','Y(m)','Z(m)'], inplace=True)
         grouped = concat_series.groupby("metric")
 
         fig, axes = plt.subplots(nrows=1, ncols=len(grouped))
         i = 0
-        axes[0].set_ylabel('Difference (m)')
+        axes[0].set_ylabel('Diferença (m)')
         for name, group in grouped:
             group.plot.bar(ax=axes[i], x="network", legend=False)
             axes[i].set_title(name)
             axes[i].set_xlabel(None)
-
+            axes[i].tick_params(axis='x', labelrotation=10,)
             axes[i].grid(True)  # Add grid lines (optional)
 
             i+=1
@@ -62,7 +65,7 @@ class SimilarityTool:
             labels,
             loc="lower center",
             ncol=4,
-            title="Coordinates",
+            title="Coordenadas",
             bbox_to_anchor=(0.5, -0.1),
         )
         plt.savefig(save_plot, bbox_inches="tight")
@@ -89,10 +92,10 @@ if __name__ == '__main__':
         st = SimilarityTool(series_path, config["ref"])
         mae, rmse, stdev, r2 = st.similarity()
 
-        mae["metric"] = "MAE (lower is better)"
-        rmse["metric"] = "RMSE (lower is better)"
-        stdev["metric"] = "STDEV (lower is better)"
-        r2["metric"] = "R2 (higher is better)"
+        mae["metric"] = "MAE (menor é melhor)"
+        rmse["metric"] = "RMSE (menor é melhor)"
+        stdev["metric"] = "STDEV (menor é melhor)"
+        r2["metric"] = "R2 (maior é melhor)"
 
         # As the metrics are Pandas Series, we need to convert them do dataframes and transpose them
         mae = mae.to_frame().T

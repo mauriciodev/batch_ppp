@@ -1,0 +1,6 @@
+series:
+  - ['C1PG', 'data/spp_rtklib_c1pg/poal.parquet']
+  - ['ED-ConvLSTM-ND', 'data/edconvlstm_nd/poal.parquet']
+ref: 'data/spp_rtklib_ionex/poal.parquet'
+output: 'plots/metrics_nd_poal.csv'
+plot: 'plots/metrics_nd_poal.pdf'

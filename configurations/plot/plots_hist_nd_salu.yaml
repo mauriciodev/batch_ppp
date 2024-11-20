@@ -1,0 +1,7 @@
+series:
+- ['CODG', 'data/spp_rtklib_ionex/salu.parquet']
+- ['BRDC', 'data/rtklib_brdc/salu.parquet']
+- ['C1PG', 'data/spp_rtklib_c1pg/salu.parquet']
+- ['ED-ConvLSTM-ND', 'data/edconvlstm_nd/salu.parquet']
+bins: 20
+plot: plots/plot_histogram_nd_salu.pdf

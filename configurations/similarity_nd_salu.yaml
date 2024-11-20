@@ -1,0 +1,6 @@
+series:
+  - ['C1PG', 'data/spp_rtklib_c1pg/salu.parquet']
+  - ['ED-ConvLSTM-ND', 'data/edconvlstm_nd/salu.parquet']
+ref: 'data/spp_rtklib_ionex/salu.parquet'
+output: 'plots/metrics_nd_salu.csv'
+plot: 'plots/metrics_nd_salu.pdf'

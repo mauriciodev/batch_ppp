@@ -1,0 +1,29 @@
+# Experiment configurations
+experiment_name: unet
+# Running folder
+run_folder: data
+# ppp_solution can be either 'rt_ppp' or 'rtklib'
+ppp_solution: rtklib
+# ppp_executable can be set for linux, windows or docker
+# for linux: rnx2rtkp or rt_ppp
+# for windows: ./rnx2rtkp.exe or ./rt_ppp.exe
+# for docker: docker exec rtklib /rnx2rtkp
+ppp_executable_test: docker exec rtklib /rnx2rtkp --help
+ppp_executable: docker exec rtklib /rnx2rtkp
+# Template file
+ppp_template_conf: templates/rtklib_template_ionex.conf
+# Start and End dates
+start_date: 2015-01-06 # YYYY-MM-DD
+end_date: 2015-12-31 # YYYY-MM-DD
+# Station to be processed
+station: salu
+# Reference position which PPP will use to start processing and to compute errors against it.
+reference_position: [4566947.86681, -4443098.54138, -286674.61629]
+# Save results as numpy
+save_array_as: data/unet/salu.parquet
+# Optional ionex pattern. Used only for GIM-based ppp
+ionex_pattern: pred{doy:03}0.{y2d:02}i
+# Ionex folder
+ionex_folder: data/unet
+# Recalculate positions
+update_pos: False

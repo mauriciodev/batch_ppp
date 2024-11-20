@@ -1,0 +1,10 @@
+files:
+  ref: ['CODG', 'data/spp_rtklib_ionex/poal.parquet']
+  igs:
+    - ['BRDC', 'data/rtklib_brdc/poal.parquet']
+    - ['C1PG', 'data/spp_rtklib_c1pg/poal.parquet']
+  series:
+    - ['C1PG', 'data/spp_rtklib_c1pg/poal.parquet']
+    - ['ED-ConvLSTM-ND', 'data/edconvlstm_nd/poal.parquet']
+    #- ['UNET 3D 7x3x3', 'data/unet/poal.parquet']
+resample: '1D'

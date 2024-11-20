@@ -1,0 +1,9 @@
+# Preprocessing configurations
+run_folder: data
+# Start and End dates
+start_date: 2015-01-04 # YYYY-MM-DD
+end_date: 2015-12-31 # YYYY-MM-DD
+# Station to be downloaded
+station: salu
+# Ionex folder
+ionex_folder: data/ionex

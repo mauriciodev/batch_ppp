@@ -1,0 +1,7 @@
+series:
+- ['CODG', 'data/spp_rtklib_ionex/poal.parquet']
+- ['BRDC', 'data/rtklib_brdc/poal.parquet']
+- ['C1PG', 'data/spp_rtklib_c1pg/poal.parquet']
+- ['ED-ConvLSTM-ND', 'data/edconvlstm_nd/poal.parquet']
+bins: 20
+plot: plots/plot_histogram2_nd_poal.pdf

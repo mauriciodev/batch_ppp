@@ -21,6 +21,8 @@ def plot(series_list, label_list, fname="plot.png", frequency="1D"):  # 2H
     for ax in axs:
         # ax.grid(True, which='both')
         ax.axhline(y=0, color="k")
+        ax.set_ylim([-3, 3])
+        #ax.set_ylim([-10, 10])
     for series, label in zip(series_list, label_list):
         series = series.resample(frequency).mean()
 

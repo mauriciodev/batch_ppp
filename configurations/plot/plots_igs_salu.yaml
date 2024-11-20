@@ -1,0 +1,9 @@
+files:
+  ref: 
+  igs:
+    - ['BRDC', 'data/rtklib_brdc/salu.parquet']
+  series:
+    - ['BRDC', 'data/rtklib_brdc/salu.parquet']
+    - ['C1PG', 'data/spp_rtklib_c1pg/salu.parquet']
+    - ['CODG', 'data/spp_rtklib_ionex/salu.parquet']
+resample: '1D'
